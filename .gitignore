@@ -1,0 +1,22 @@
+# Ambiente e segredos
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.pgdata/
+
+# Node
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Editores e SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

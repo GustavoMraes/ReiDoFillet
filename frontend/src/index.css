@@ -1,0 +1,217 @@
+:root {
+  --fundo: #1c1714;
+  --superficie: #2a231f;
+  --borda: #3a312b;
+  --texto: #f3ece6;
+  --texto-suave: #a89a8f;
+  --marca: #c8392b;
+
+  --livre: #5a9e4b;
+  --ocupada: #c8392b;
+  --reservada: #d49a2a;
+  --aguardando: #e3c04a;
+  --manutencao: #7d746d;
+
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color: var(--texto);
+  background: var(--fundo);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--fundo);
+}
+
+.topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--borda);
+}
+
+.marca strong {
+  font-size: 1.1rem;
+  letter-spacing: 0.02em;
+}
+
+.marca strong span {
+  color: var(--marca);
+}
+
+.marca small {
+  margin-left: 10px;
+  color: var(--texto-suave);
+  font-size: 0.75rem;
+}
+
+.abas {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  background: var(--superficie);
+}
+
+.abas button {
+  border: 0;
+  border-radius: 6px;
+  padding: 6px 14px;
+  background: transparent;
+  color: var(--texto-suave);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.abas button.ativa {
+  background: var(--marca);
+  color: #fff;
+}
+
+.abas button:disabled:not(.ativa) {
+  opacity: 0.5;
+}
+
+.usuario {
+  min-width: 120px;
+}
+
+.conteudo {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 24px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.subtitulo {
+  margin: 4px 0 16px;
+  color: var(--texto-suave);
+  font-size: 0.85rem;
+}
+
+.legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+}
+
+.legenda li::before {
+  content: '';
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 6px;
+  border-radius: 2px;
+  background: var(--cor-status);
+}
+
+.status-livre { --cor-status: var(--livre); }
+.status-ocupada { --cor-status: var(--ocupada); }
+.status-reservada { --cor-status: var(--reservada); }
+.status-aguardando_pagamento { --cor-status: var(--aguardando); }
+.status-manutencao { --cor-status: var(--manutencao); }
+
+.grade-mesas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.cartao-mesa {
+  position: relative;
+  padding: 14px;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  background: var(--superficie);
+}
+
+.cartao-mesa h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.cartao-mesa .localizacao {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  color: var(--texto-suave);
+  font-size: 0.7rem;
+}
+
+.cartao-mesa .capacidade {
+  margin: 2px 0 10px;
+  color: var(--texto-suave);
+  font-size: 0.8rem;
+}
+
+.selo {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--cor-status) 25%, transparent);
+  color: var(--cor-status);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.cartao-mesa .info {
+  margin: 8px 0 0;
+  color: var(--texto-suave);
+  font-size: 0.75rem;
+}
+
+.aviso {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--reservada);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--reservada) 15%, transparent);
+  font-size: 0.85rem;
+}
+
+.vazio {
+  color: var(--texto-suave);
+}
+
+@media (max-width: 640px) {
+  .topo {
+    flex-wrap: wrap;
+    padding: 12px 16px;
+  }
+
+  .marca small,
+  .usuario {
+    display: none;
+  }
+
+  .abas {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .abas button {
+    padding: 6px 10px;
+  }
+
+  .conteudo {
+    padding: 20px 16px;
+  }
+}

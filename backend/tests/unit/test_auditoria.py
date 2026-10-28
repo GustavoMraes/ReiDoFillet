@@ -1,0 +1,91 @@
+from datetime import UTC, datetime
+
+from app.core.tempo import RelogioFixo
+from app.models import Funcionario, Mesa
+from app.repositories.auditoria import AuditoriaRepository
+from app.schemas.snapshots import FuncionarioSnapshot, MesaSnapshot
+from app.services.auditoria import Acao, AuditoriaService
+
+AGORA = datetime(2026, 10, 25, 23, 15, tzinfo=UTC)
+
+
+class SessaoFalsa:
+    def __init__(self):
+        self.adicionados = []
+
+    def add(self, objeto):
+        self.adicionados.append(objeto)
+
+
+def _servico() -> tuple[AuditoriaService, SessaoFalsa]:
+    sessao = SessaoFalsa()
+    return AuditoriaService(AuditoriaRepository(sessao), RelogioFixo(AGORA)), sessao
+
+
+def _mesa(**alteracoes) -> MesaSnapshot:
+    dados = {"id": 7, "numero": 7, "capacidade": 4, "localizacao": "Salão", "em_manutencao": False}
+    return MesaSnapshot.model_validate(Mesa(**(dados | alteracoes)))
+
+
+def test_criacao_grava_estado_posterior_e_antes_vazio():
+    servico, sessao = _servico()
+
+    log = servico.registrar(usuario_id=1, acao=Acao.CRIAR, entidade="Mesa", entidade_id=7, antes=None, depois=_mesa())
+
+    assert sessao.adicionados == [log]
+    assert (log.usuario_id, log.acao, log.entidade, log.entidade_id) == (1, "CRIAR", "Mesa", "7")
+    assert log.dados_antes is None
+    assert log.dados_depois["numero"] == 7
+    assert log.criado_em == AGORA
+
+
+def test_alteracao_grava_antes_e_depois():
+    servico, _ = _servico()
+
+    log = servico.registrar(
+        usuario_id=1,
+        acao=Acao.ALTERAR,
+        entidade="Mesa",
+        entidade_id=7,
+        antes=_mesa(),
+        depois=_mesa(em_manutencao=True),
+    )
+
+    assert log.dados_antes["em_manutencao"] is False
+    assert log.dados_depois["em_manutencao"] is True
+
+
+def test_exclusao_grava_antes_e_depois_vazio():
+    servico, _ = _servico()
+
+    log = servico.registrar(usuario_id=1, acao=Acao.EXCLUIR, entidade="Mesa", entidade_id=7, antes=_mesa(), depois=None)
+
+    assert log.dados_antes["id"] == 7
+    assert log.dados_depois is None
+
+
+def test_operacao_do_sistema_nao_tem_usuario():
+    servico, _ = _servico()
+
+    log = servico.registrar(usuario_id=None, acao=Acao.CRIAR, entidade="Mesa", entidade_id=7, antes=None, depois=_mesa())
+
+    assert log.usuario_id is None
+
+
+def test_snapshot_de_funcionario_nao_inclui_senha():
+    funcionario = Funcionario(
+        id=3, nome="Gabriela", login="gabriela", senha_hash="hash-secreto", perfil="FUNCIONARIO", bloqueado=False
+    )
+    servico, _ = _servico()
+
+    log = servico.registrar(
+        usuario_id=None,
+        acao=Acao.CRIAR,
+        entidade="Funcionario",
+        entidade_id=3,
+        antes=None,
+        depois=FuncionarioSnapshot.model_validate(funcionario),
+    )
+
+    assert "senha_hash" not in log.dados_depois
+    assert "hash-secreto" not in str(log.dados_depois)
