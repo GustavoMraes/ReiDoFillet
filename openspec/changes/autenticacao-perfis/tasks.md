@@ -34,12 +34,12 @@
 ## 7. Documentação e implantação
 
 - [x] 7.1 Documentar no `README.md` a variável `JWT_SECRET` (com o comando de geração), o script de definição de senha e o uso do *Authorize* no Swagger; verificar executando os comandos documentados localmente
-- [ ] 7.2 Com `JWT_SECRET` configurado no Render, publicar o change e definir pelo script as senhas dos funcionários no Neon; verificar `POST /auth/login` e `GET /mesas` autenticado pela URL pública, e `GET /mesas` sem token retornando 401
+- [x] 7.2 Com `JWT_SECRET` configurado no Render, publicar o change e definir pelo script as senhas dos funcionários no Neon; verificar `POST /auth/login` e `GET /mesas` autenticado pela URL pública, e `GET /mesas` sem token retornando 401
 
 ## 8. Verificação integrada
 
 - [x] 8.1 Rodar `pytest` completo (unitários e integração) e verificar que todos passam
-- [ ] 8.2 No site publicado, entrar com cada perfil, confirmar a tela correta de cada um, sair, e bloquear temporariamente um funcionário no banco para confirmar o bloqueio no login e em uma sessão aberta; desfazer o bloqueio ao final
+- [x] 8.2 No site publicado, entrar com cada perfil, confirmar a tela correta de cada um, sair, e bloquear temporariamente um funcionário no banco para confirmar o bloqueio no login e em uma sessão aberta; desfazer o bloqueio ao final
 
 ## Workflow follow-up
 
