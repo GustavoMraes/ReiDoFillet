@@ -1,3 +1,5 @@
+import { EVENTO_SESSAO_EXPIRADA, lerSessao } from '../auth/sessao'
+
 const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:8000').replace(/\/$/, '')
 
 export class ErroApi extends Error {
@@ -9,16 +11,43 @@ export class ErroApi extends Error {
   }
 }
 
-export async function getJson<T>(caminho: string): Promise<T> {
+interface Opcoes {
+  metodo?: 'GET' | 'POST'
+  corpo?: unknown
+  /** Na chamada de login, um 401 é erro de credencial, não sessão expirada. */
+  semSessao?: boolean
+}
+
+async function requisitar<T>(caminho: string, { metodo = 'GET', corpo, semSessao = false }: Opcoes = {}): Promise<T> {
+  const cabecalhos: Record<string, string> = {}
+  const token = semSessao ? null : lerSessao()?.token
+  if (token) cabecalhos.Authorization = `Bearer ${token}`
+  if (corpo !== undefined) cabecalhos['Content-Type'] = 'application/json'
+
   let resposta: Response
   try {
-    resposta = await fetch(`${API_URL}${caminho}`)
+    resposta = await fetch(`${API_URL}${caminho}`, {
+      method: metodo,
+      headers: cabecalhos,
+      body: corpo === undefined ? undefined : JSON.stringify(corpo),
+    })
   } catch {
     throw new ErroApi('Servidor indisponível')
   }
+
   if (!resposta.ok) {
-    const corpo = await resposta.json().catch(() => null)
-    throw new ErroApi(corpo?.detalhe ?? `Erro ${resposta.status}`, resposta.status)
+    const conteudo = await resposta.json().catch(() => null)
+    if (resposta.status === 401 && !semSessao) window.dispatchEvent(new Event(EVENTO_SESSAO_EXPIRADA))
+    const detalhe = typeof conteudo?.detalhe === 'string' ? conteudo.detalhe : `Erro ${resposta.status}`
+    throw new ErroApi(detalhe, resposta.status)
   }
   return resposta.json() as Promise<T>
+}
+
+export function getJson<T>(caminho: string): Promise<T> {
+  return requisitar<T>(caminho)
+}
+
+export function postJson<T>(caminho: string, corpo: unknown, opcoes: Omit<Opcoes, 'metodo' | 'corpo'> = {}): Promise<T> {
+  return requisitar<T>(caminho, { ...opcoes, metodo: 'POST', corpo })
 }

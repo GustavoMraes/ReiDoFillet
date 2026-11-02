@@ -20,6 +20,14 @@ class Conflito(ErroNegocio):
     status_code = 409
 
 
+class NaoAutenticado(ErroNegocio):
+    status_code = 401
+
+
+class SemPermissao(ErroNegocio):
+    status_code = 403
+
+
 async def _tratar_erro_negocio(_: Request, erro: ErroNegocio) -> JSONResponse:
     return JSONResponse(status_code=erro.status_code, content={"detalhe": erro.mensagem})
 

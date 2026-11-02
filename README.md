@@ -26,11 +26,31 @@ cd backend
 python -m venv .venv
 .venv/Scripts/activate          # Windows (Git Bash). Linux/macOS: source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env            # ajuste DATABASE_URL
+cp .env.example .env            # ajuste DATABASE_URL e JWT_SECRET (abaixo)
 alembic upgrade head            # cria as tabelas
 python -m scripts.seed          # dados de exemplo (pode rodar mais de uma vez)
 uvicorn app.main:app --reload   # http://localhost:8000  (Swagger em /docs)
 ```
+
+### Autenticação
+
+A API não sobe sem `JWT_SECRET` (mínimo de 32 caracteres), a chave que assina os tokens de sessão. Gere uma com:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(48))"
+```
+
+Trocar a chave encerra todas as sessões abertas. A sessão dura `JWT_EXPIRACAO_HORAS` (padrão: 12).
+
+O seed cria os funcionários `gabriela` (Funcionário), `admin` (Administrador) e `contabilidade` (Contabilidade) **sem senha**: ninguém entra até a senha ser definida. Até existir a tela de usuários, defina a senha pelo script (pede a senha duas vezes, sem exibir; mínimo de 8 caracteres):
+
+```bash
+python -m scripts.definir_senha gabriela
+```
+
+O script usa o `DATABASE_URL` do `.env`: para definir senhas em produção, ele precisa apontar para o banco do Neon.
+
+Para testar rotas protegidas no Swagger (`/docs`): chame `POST /auth/login`, copie o `token` da resposta, clique em **Authorize** e cole o token.
 
 Testes:
 
@@ -55,6 +75,7 @@ Variáveis de ambiente (os valores reais ficam só nos painéis, nunca no reposi
 | Render | `DATABASE_URL` | connection string direta do Neon no formato `postgresql+asyncpg://...?ssl=require` |
 | Render | `CORS_ORIGINS` | `https://reidofilet.vercel.app,http://localhost:5173` |
 | Render | `TZ_EXIBICAO` | `America/Sao_Paulo` |
+| Render | `JWT_SECRET` | chave gerada com o comando da seção Autenticação, diferente da usada localmente |
 | Render | `PYTHON_VERSION` | `3.13.14` (o SQLAlchemy 2.0.36 não é compatível com o Python 3.14 padrão do Render) |
 | Vercel | `VITE_API_URL` | `https://reidofilet-api.onrender.com` |
 

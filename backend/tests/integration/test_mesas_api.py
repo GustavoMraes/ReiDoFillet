@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
+import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
@@ -10,16 +11,19 @@ from app.core.tempo import RelogioFixo, get_relogio
 from app.db.session import get_session
 from app.main import create_app
 from app.models import Comanda, Mesa, Reserva
+from app.repositories.funcionario import FuncionarioRepository
 from app.repositories.mesa import MesaRepository
 from app.services.mesa import MesaService
 from scripts.seed import seed
+from tests.conftest import SEGREDO_TESTE
+from tests.integration.fabricas import cabecalho_de, criar_funcionario
 
 SP = ZoneInfo("America/Sao_Paulo")
 AGORA = datetime(2026, 10, 25, 20, 10, tzinfo=SP)
 
 
 def _cliente(session: AsyncSession) -> AsyncClient:
-    app = create_app(Settings(_env_file=None))
+    app = create_app(Settings(_env_file=None, jwt_secret=SEGREDO_TESTE))
     app.dependency_overrides[get_session] = lambda: session
     app.dependency_overrides[get_relogio] = lambda: RelogioFixo(AGORA)
     return AsyncClient(transport=ASGITransport(app=app), base_url="http://test")
@@ -51,9 +55,10 @@ async def test_mapa_com_mesas_do_seed_e_status_calculados(session: AsyncSession)
         ]
     )
     await session.commit()
+    gabriela = await FuncionarioRepository(session).obter_por_login("gabriela")
 
     async with _cliente(session) as cliente:
-        resposta = await cliente.get("/mesas")
+        resposta = await cliente.get("/mesas", headers=cabecalho_de(gabriela))
 
     assert resposta.status_code == 200
     mapa = resposta.json()
@@ -77,11 +82,30 @@ async def test_mapa_com_mesas_do_seed_e_status_calculados(session: AsyncSession)
 
 
 async def test_mapa_sem_mesas_retorna_lista_vazia(session: AsyncSession):
+    funcionario = await criar_funcionario(session, "gabriela")
+
     async with _cliente(session) as cliente:
-        resposta = await cliente.get("/mesas")
+        resposta = await cliente.get("/mesas", headers=cabecalho_de(funcionario))
 
     assert resposta.status_code == 200
     assert resposta.json() == []
+
+
+@pytest.mark.parametrize(("perfil", "status_esperado"), [("FUNCIONARIO", 200), ("ADMIN", 200), ("CONTABILIDADE", 403)])
+async def test_acesso_ao_mapa_por_perfil(session: AsyncSession, perfil: str, status_esperado: int):
+    usuario = await criar_funcionario(session, "usuario", perfil=perfil)
+
+    async with _cliente(session) as cliente:
+        resposta = await cliente.get("/mesas", headers=cabecalho_de(usuario))
+
+    assert resposta.status_code == status_esperado
+
+
+async def test_mapa_sem_sessao(session: AsyncSession):
+    async with _cliente(session) as cliente:
+        resposta = await cliente.get("/mesas")
+
+    assert resposta.status_code == 401
 
 
 async def test_mapa_usa_no_maximo_tres_consultas(session: AsyncSession, engine: AsyncEngine):

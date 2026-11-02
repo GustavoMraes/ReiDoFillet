@@ -10,6 +10,9 @@ class Acao(StrEnum):
     CRIAR = "CRIAR"
     ALTERAR = "ALTERAR"
     EXCLUIR = "EXCLUIR"
+    LOGIN = "LOGIN"
+    LOGIN_FALHA = "LOGIN_FALHA"
+    DEFINIR_SENHA = "DEFINIR_SENHA"
 
 
 class AuditoriaService:

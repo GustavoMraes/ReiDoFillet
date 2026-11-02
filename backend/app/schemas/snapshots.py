@@ -19,6 +19,15 @@ class FuncionarioSnapshot(Snapshot):
     bloqueado: bool
 
 
+class TentativaLoginSnapshot(Snapshot):
+    """Dados de uma falha de login. Não aceita campos extras: a senha nunca entra na auditoria."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    login: str
+    motivo: str
+
+
 class MesaSnapshot(Snapshot):
     id: int
     numero: int

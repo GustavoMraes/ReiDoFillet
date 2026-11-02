@@ -5,6 +5,8 @@ asyncpg==0.30.0
 alembic==1.14.0
 pydantic-settings==2.6.1
 tzdata==2024.2
+PyJWT==2.10.1
+bcrypt==4.2.1
 
 # testes
 pytest==8.3.4

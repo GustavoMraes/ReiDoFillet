@@ -82,7 +82,118 @@ body {
 }
 
 .usuario {
-  min-width: 120px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--texto-suave);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.usuario .ponto {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--livre);
+}
+
+.sair {
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  padding: 4px 10px;
+  background: transparent;
+  color: var(--texto);
+  font: inherit;
+  cursor: pointer;
+}
+
+.sair:hover {
+  border-color: var(--texto-suave);
+}
+
+.tela-login {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 16px;
+}
+
+.cartao-login {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+  max-width: 360px;
+  padding: 28px 24px;
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  background: var(--superficie);
+}
+
+.cartao-login .marca {
+  text-align: center;
+}
+
+.cartao-login .marca small {
+  display: block;
+  margin: 4px 0 0;
+}
+
+.cartao-login h1 {
+  font-size: 1.2rem;
+}
+
+.cartao-login label {
+  display: grid;
+  gap: 6px;
+  color: var(--texto-suave);
+  font-size: 0.8rem;
+}
+
+.cartao-login input {
+  padding: 10px 12px;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  background: var(--fundo);
+  color: var(--texto);
+  font: inherit;
+  font-size: 0.95rem;
+}
+
+.cartao-login input:focus {
+  outline: 2px solid var(--marca);
+  outline-offset: 1px;
+}
+
+.cartao-login button[type='submit'] {
+  margin-top: 4px;
+  padding: 10px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--marca);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cartao-login button[type='submit']:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.cartao-login .aviso,
+.cartao-login .erro {
+  margin: 0;
+}
+
+.erro {
+  padding: 10px 14px;
+  border: 1px solid var(--ocupada);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ocupada) 15%, transparent);
+  font-size: 0.85rem;
 }
 
 .conteudo {
@@ -191,15 +302,29 @@ h1 {
   color: var(--texto-suave);
 }
 
+@media (max-width: 1000px) {
+  .topo .marca small {
+    display: none;
+  }
+}
+
 @media (max-width: 640px) {
   .topo {
     flex-wrap: wrap;
     padding: 12px 16px;
   }
 
-  .marca small,
-  .usuario {
+  .topo .marca small {
     display: none;
+  }
+
+  .topo .marca {
+    order: -2;
+  }
+
+  .usuario {
+    order: -1;
+    margin-left: auto;
   }
 
   .abas {

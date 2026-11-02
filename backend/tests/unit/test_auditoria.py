@@ -1,9 +1,12 @@
 from datetime import UTC, datetime
 
+import pydantic
+import pytest
+
 from app.core.tempo import RelogioFixo
 from app.models import Funcionario, Mesa
 from app.repositories.auditoria import AuditoriaRepository
-from app.schemas.snapshots import FuncionarioSnapshot, MesaSnapshot
+from app.schemas.snapshots import FuncionarioSnapshot, MesaSnapshot, TentativaLoginSnapshot
 from app.services.auditoria import Acao, AuditoriaService
 
 AGORA = datetime(2026, 10, 25, 23, 15, tzinfo=UTC)
@@ -89,3 +92,13 @@ def test_snapshot_de_funcionario_nao_inclui_senha():
 
     assert "senha_hash" not in log.dados_depois
     assert "hash-secreto" not in str(log.dados_depois)
+
+
+def test_snapshot_de_tentativa_de_login_nao_aceita_senha():
+    with pytest.raises(pydantic.ValidationError):
+        TentativaLoginSnapshot(login="gabriela", motivo="CREDENCIAIS_INVALIDAS", senha="segredo")
+
+    assert TentativaLoginSnapshot(login="gabriela", motivo="CREDENCIAIS_INVALIDAS").model_dump() == {
+        "login": "gabriela",
+        "motivo": "CREDENCIAIS_INVALIDAS",
+    }

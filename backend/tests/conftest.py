@@ -1,5 +1,12 @@
+import os
+
 import pytest
 from pytest_asyncio import is_async_test
+
+# Chave usada pelos testes quando não houver JWT_SECRET no ambiente; precisa existir antes de
+# `app.main` ser importado, pois o módulo cria a aplicação na importação.
+SEGREDO_TESTE = "segredo-de-teste-com-mais-de-32-caracteres"
+os.environ.setdefault("JWT_SECRET", SEGREDO_TESTE)
 
 
 def pytest_collection_modifyitems(items):

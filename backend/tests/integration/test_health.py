@@ -2,12 +2,13 @@ from httpx import ASGITransport, AsyncClient
 
 from app.core.config import Settings
 from app.main import create_app
+from tests.conftest import SEGREDO_TESTE
 
 ORIGEM_PERMITIDA = "https://reidofilet.vercel.app"
 
 
 def _cliente() -> AsyncClient:
-    app = create_app(Settings(_env_file=None, cors_origins=ORIGEM_PERMITIDA))
+    app = create_app(Settings(_env_file=None, cors_origins=ORIGEM_PERMITIDA, jwt_secret=SEGREDO_TESTE))
     return AsyncClient(transport=ASGITransport(app=app), base_url="http://test")
 
 
