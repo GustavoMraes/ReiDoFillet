@@ -5,6 +5,7 @@
 Permitir que funcionários e administradores visualizem o mapa de mesas do restaurante com a situação atual de cada mesa, calculada a partir de manutenção, comanda ativa e reservas.
 
 ## Requirements
+
 ### Requirement: Listagem do mapa de mesas
 O sistema SHALL disponibilizar a listagem de todas as mesas cadastradas, ordenadas pelo número, contendo para cada mesa: número, capacidade, localização e status atual.
 
@@ -82,10 +83,10 @@ Para mesas OCUPADA ou AGUARDANDO_PAGAMENTO, o mapa MUST informar o tempo decorri
 - **THEN** o mapa não informa tempo de atendimento nem horário de reserva
 
 ### Requirement: Exibição do mapa de mesas na interface
-A interface SHALL exibir o Mapa de Mesas como primeira tela, com um cartão por mesa contendo número, capacidade, localização, status com cor própria e a informação complementar, além de uma legenda dos cinco status. A tela MUST atualizar os dados automaticamente em no máximo 10 segundos, sem recarregar a página.
+A interface SHALL exibir o Mapa de Mesas como primeira tela após o login de um Funcionário ou Administrador, com um cartão por mesa contendo número, capacidade, localização, status com cor própria e a informação complementar, além de uma legenda dos cinco status. A tela MUST atualizar os dados automaticamente em no máximo 10 segundos, sem recarregar a página.
 
 #### Scenario: Exibição inicial
-- **WHEN** o usuário acessa a aplicação
+- **WHEN** um Funcionário ou Administrador entra no sistema
 - **THEN** o Mapa de Mesas é exibido com um cartão por mesa e a legenda Livre, Ocupada, Reservada, Aguardando pagamento e Manutenção
 
 #### Scenario: Atualização automática
@@ -95,3 +96,22 @@ A interface SHALL exibir o Mapa de Mesas como primeira tela, com um cartão por 
 #### Scenario: Falha temporária de comunicação
 - **WHEN** uma atualização automática falha por indisponibilidade do servidor
 - **THEN** a interface mantém os últimos dados exibidos, informa que os dados podem estar desatualizados e tenta novamente na próxima atualização
+
+### Requirement: Acesso ao mapa de mesas restrito por perfil
+A consulta do mapa de mesas MUST exigir sessão válida e MUST ser liberada apenas para os perfis Funcionário e Administrador, que são os atores da UC 7.6.
+
+#### Scenario: Funcionário consulta o mapa
+- **WHEN** um usuário com perfil Funcionário consulta o mapa de mesas
+- **THEN** o sistema retorna as mesas com seus status
+
+#### Scenario: Administrador consulta o mapa
+- **WHEN** um usuário com perfil Administrador consulta o mapa de mesas
+- **THEN** o sistema retorna as mesas com seus status
+
+#### Scenario: Contabilidade não consulta o mapa
+- **WHEN** um usuário com perfil Contabilidade consulta o mapa de mesas
+- **THEN** a requisição é recusada como sem permissão
+
+#### Scenario: Consulta sem sessão
+- **WHEN** o mapa de mesas é consultado sem sessão válida
+- **THEN** a requisição é recusada como não autenticada
