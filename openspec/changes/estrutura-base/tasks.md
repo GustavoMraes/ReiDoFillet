@@ -46,14 +46,14 @@
 ## 7. Deploy
 
 - [x] 7.1 Provisionar o PostgreSQL no Neon.tech, aplicar migrações e seed; verificar conectando ao banco e listando as 8 mesas
-- [ ] 7.2 Publicar o backend no Render com o comando de start do D6 e as variáveis de ambiente; verificar `GET /health` e `GET /mesas` pela URL pública
-- [ ] 7.3 Publicar o frontend na Vercel com `VITE_API_URL` e ajustar `CORS_ORIGINS` no Render; verificar o Mapa de Mesas carregando na URL pública sem erro de CORS
-- [ ] 7.4 Configurar o UptimeRobot com ping em `/health` e documentar as URLs e variáveis no `README.md`; verificar o monitor ativo
+- [x] 7.2 Publicar o backend no Render com o comando de start do D6 e as variáveis de ambiente; verificar `GET /health` e `GET /mesas` pela URL pública
+- [x] 7.3 Publicar o frontend na Vercel com `VITE_API_URL` e ajustar `CORS_ORIGINS` no Render; verificar o Mapa de Mesas carregando na URL pública sem erro de CORS
+- [x] 7.4 Configurar o UptimeRobot com ping em `/health` e documentar as URLs e variáveis no `README.md`; verificar o monitor ativo
 
 ## 8. Verificação integrada
 
 - [x] 8.1 Rodar `pytest tests/unit` e `pytest tests/integration` completos e verificar que todos passam
-- [ ] 8.2 No ambiente publicado, criar manualmente no banco uma comanda ABERTA, uma PRE_CONTA e uma reserva dentro da janela; verificar que o Mapa de Mesas exibe Ocupada, Aguardando pagamento e Reservada em até 10s
+- [x] 8.2 No ambiente publicado, criar manualmente no banco uma comanda ABERTA, uma PRE_CONTA e uma reserva dentro da janela; verificar que o Mapa de Mesas exibe Ocupada, Aguardando pagamento e Reservada em até 10s
 
 ## Workflow follow-up
 

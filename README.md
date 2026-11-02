@@ -39,6 +39,27 @@ pytest tests/unit               # regras de negócio, sem banco
 pytest tests/integration        # exige TEST_DATABASE_URL no .env; sem ela, são pulados
 ```
 
+## Ambiente publicado
+
+| Serviço | URL | Plataforma |
+|---|---|---|
+| Frontend | https://reidofilet.vercel.app | Vercel (Root Directory `frontend`) |
+| API | https://reidofilet-api.onrender.com (Swagger em `/docs`) | Render, plano Free (Root Directory `backend`) |
+| Banco | PostgreSQL 18, região São Paulo | Neon.tech |
+| Monitor | ping em `/health` a cada 5 min, evita a hibernação do Render | UptimeRobot |
+
+Variáveis de ambiente (os valores reais ficam só nos painéis, nunca no repositório):
+
+| Onde | Variável | Valor |
+|---|---|---|
+| Render | `DATABASE_URL` | connection string direta do Neon no formato `postgresql+asyncpg://...?ssl=require` |
+| Render | `CORS_ORIGINS` | `https://reidofilet.vercel.app,http://localhost:5173` |
+| Render | `TZ_EXIBICAO` | `America/Sao_Paulo` |
+| Render | `PYTHON_VERSION` | `3.13.14` (o SQLAlchemy 2.0.36 não é compatível com o Python 3.14 padrão do Render) |
+| Vercel | `VITE_API_URL` | `https://reidofilet-api.onrender.com` |
+
+Comandos do Render: build `pip install -r requirements.txt`; start `alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT` (as migrações rodam a cada deploy). Cada push na `main` dispara um novo deploy nas duas plataformas.
+
 ## Frontend
 
 ```bash
