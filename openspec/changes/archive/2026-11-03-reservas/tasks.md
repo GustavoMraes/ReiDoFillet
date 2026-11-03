@@ -20,7 +20,7 @@
 ## 4. Implantação e verificação
 
 - [x] 4.1 Rodar `pytest` completo e `npm run build` e verificar que tudo passa
-- [ ] 4.2 Publicar (push na `main`) e verificar na URL pública: criar uma reserva para dentro de 20 minutos e confirmar a mesa Reservada no mapa, fazer o check-in pelo mapa, criar outra e cancelar; ao final, encerrar pelo próprio sistema a comanda aberta no check-in
+- [x] 4.2 Publicar (push na `main`) e verificar na URL pública: criar uma reserva para dentro de 20 minutos e confirmar a mesa Reservada no mapa, fazer o check-in pelo mapa, criar outra e cancelar; ao final, encerrar pelo próprio sistema a comanda aberta no check-in
 
 ## Workflow follow-up
 

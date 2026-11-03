@@ -167,10 +167,10 @@ Todas as operações de comanda MUST exigir sessão válida e MUST ser liberadas
 - **THEN** a requisição é recusada como sem permissão
 
 ### Requirement: Abertura da comanda pelo mapa de mesas
-Na interface, clicar em uma mesa Livre, Ocupada ou Aguardando pagamento MUST abrir ou retomar a comanda e exibir a tela da comanda. Clicar em uma mesa em Manutenção ou Reservada MUST exibir a mensagem correspondente e manter o mapa.
+Na interface, clicar em uma mesa Livre, Ocupada ou Aguardando pagamento MUST abrir ou retomar a comanda e exibir a tela da comanda. Em mesa Livre com reserva próxima informada no mapa, a abertura MUST ser precedida de um aviso com o horário da reserva, que o funcionário confirma ou desiste. Clicar em uma mesa Reservada MUST oferecer o check-in da reserva que a bloqueia, mostrando cliente, pessoas e horário. Clicar em uma mesa em Manutenção MUST exibir a mensagem correspondente e manter o mapa.
 
 #### Scenario: Clique em mesa livre
-- **WHEN** o funcionário clica em uma mesa Livre no mapa
+- **WHEN** o funcionário clica em uma mesa Livre sem reserva próxima no mapa
 - **THEN** a comanda é aberta e a tela da comanda é exibida
 
 #### Scenario: Clique em mesa ocupada
@@ -179,7 +179,11 @@ Na interface, clicar em uma mesa Livre, Ocupada ou Aguardando pagamento MUST abr
 
 #### Scenario: Clique em mesa reservada
 - **WHEN** o funcionário clica em uma mesa Reservada no mapa
-- **THEN** é exibida a mensagem "Mesa reservada: aguarde o check-in do cliente" e o mapa continua na tela
+- **THEN** são exibidos o cliente, as pessoas e o horário da reserva, com a opção de fazer o check-in; ao confirmar, a reserva é concluída e a tela da comanda é exibida
+
+#### Scenario: Mesa livre com reserva próxima
+- **WHEN** o funcionário clica em uma mesa Livre com reserva às 20h30 informada no mapa
+- **THEN** é exibido o aviso "Esta mesa tem reserva às 20h30. Abrir a comanda mesmo assim?"; se confirmar, a comanda é aberta; se desistir, o mapa continua na tela
 
 ### Requirement: Tela da comanda
 A tela da comanda SHALL exibir o cardápio por categoria, com controle para adicionar cada produto com quantidade e observação, os produtos indisponíveis desabilitados e identificados, os itens lançados com status e subtotal, controles para alterar e cancelar itens e o total. A tela MUST atualizar automaticamente em no máximo 10 segundos e confirmar cada ação com uma mensagem temporária.
