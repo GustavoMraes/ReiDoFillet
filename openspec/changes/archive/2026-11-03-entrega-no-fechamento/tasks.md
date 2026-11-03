@@ -11,7 +11,7 @@
 ## 3. Implantação e verificação
 
 - [x] 3.1 Rodar `pytest` completo e verificar que tudo passa
-- [ ] 3.2 Publicar (push na `main`), confirmar que o deploy aplicou a migração e que os itens presos sumiram do painel da cozinha em produção; repetir o fluxo do problema (pagar uma comanda com item em preparo) e confirmar que o item sai do painel
+- [x] 3.2 Publicar (push na `main`), confirmar que o deploy aplicou a migração e que os itens presos sumiram do painel da cozinha em produção; repetir o fluxo do problema (pagar uma comanda com item em preparo) e confirmar que o item sai do painel
 
 ## Workflow follow-up
 
