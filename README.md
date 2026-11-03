@@ -42,10 +42,10 @@ python -c "import secrets; print(secrets.token_urlsafe(48))"
 
 Trocar a chave encerra todas as sessões abertas. A sessão dura `JWT_EXPIRACAO_HORAS` (padrão: 12).
 
-O seed cria os funcionários `gabriela` (Funcionário), `admin` (Administrador) e `contabilidade` (Contabilidade) **sem senha**: ninguém entra até a senha ser definida. Até existir a tela de usuários, defina a senha pelo script (pede a senha duas vezes, sem exibir; mínimo de 8 caracteres):
+O seed cria os funcionários `gabriela` (Funcionário), `admin` (Administrador) e `contabilidade` (Contabilidade) **sem senha**: ninguém entra até a senha ser definida. Defina a senha do primeiro administrador pelo script (pede a senha duas vezes, sem exibir; mínimo de 8 caracteres); depois disso, usuários e senhas são mantidos pela aba **Usuários** e cada pessoa troca a própria senha em "Trocar senha". O script continua disponível para recuperar o acesso:
 
 ```bash
-python -m scripts.definir_senha gabriela
+python -m scripts.definir_senha admin
 ```
 
 O script usa o `DATABASE_URL` do `.env`: para definir senhas em produção, ele precisa apontar para o banco do Neon.

@@ -1,22 +1,24 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 
 import { useAuth } from '../auth/AuthContext'
 import { ROTULOS_PERFIL } from '../auth/sessao'
+import TrocarSenha from './TrocarSenha'
 
-export type Aba = 'Mapa de Mesas' | 'Reservas' | 'Comanda' | 'Cozinha' | 'Pagamento'
-
-const ABAS: Aba[] = ['Mapa de Mesas', 'Reservas', 'Comanda', 'Cozinha', 'Pagamento']
+export type Aba = 'Mapa de Mesas' | 'Reservas' | 'Comanda' | 'Cozinha' | 'Pagamento' | 'Cardápio' | 'Usuários'
 
 interface Props {
   abaAtiva?: Aba
+  /** Abas exibidas para o perfil, em ordem. */
+  abas?: Aba[]
   /** Abas clicáveis; as demais aparecem desabilitadas. */
   abasDisponiveis?: Aba[]
   onNavegar?: (aba: Aba) => void
   children: ReactNode
 }
 
-export default function Layout({ abaAtiva, abasDisponiveis = [], onNavegar, children }: Props) {
+export default function Layout({ abaAtiva, abas = [], abasDisponiveis = [], onNavegar, children }: Props) {
   const { usuario, sair } = useAuth()
+  const [trocandoSenha, setTrocandoSenha] = useState(false)
 
   return (
     <>
@@ -29,7 +31,7 @@ export default function Layout({ abaAtiva, abasDisponiveis = [], onNavegar, chil
         </div>
         {abaAtiva && (
           <nav className="abas">
-            {ABAS.map((aba) => (
+            {abas.map((aba) => (
               <button
                 key={aba}
                 className={aba === abaAtiva ? 'ativa' : ''}
@@ -47,6 +49,9 @@ export default function Layout({ abaAtiva, abasDisponiveis = [], onNavegar, chil
               <span className="ponto" aria-hidden="true" />
               {usuario.nome} · {ROTULOS_PERFIL[usuario.perfil]}
             </span>
+            <button className="sair" onClick={() => setTrocandoSenha(true)}>
+              Trocar senha
+            </button>
             <button className="sair" onClick={sair}>
               Sair
             </button>
@@ -54,6 +59,7 @@ export default function Layout({ abaAtiva, abasDisponiveis = [], onNavegar, chil
         )}
       </header>
       <main className="conteudo">{children}</main>
+      {trocandoSenha && <TrocarSenha onFechar={() => setTrocandoSenha(false)} />}
     </>
   )
 }

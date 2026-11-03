@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings
@@ -8,9 +8,11 @@ from app.models import Funcionario
 from app.repositories.auditoria import AuditoriaRepository
 from app.repositories.funcionario import FuncionarioRepository
 from app.routers.dependencias import get_app_settings, usuario_atual
-from app.schemas.autenticacao import LoginIn, LoginOut, UsuarioOut
+from app.routers.usuarios import get_funcionario_service
+from app.schemas.autenticacao import LoginIn, LoginOut, TrocaSenhaIn, UsuarioOut
 from app.services.auditoria import AuditoriaService
 from app.services.autenticacao import AuthService
+from app.services.funcionario import FuncionarioService
 
 router = APIRouter(prefix="/auth", tags=["Autenticação"])
 
@@ -47,3 +49,19 @@ async def login(dados: LoginIn, service: AuthService = Depends(get_auth_service)
 @router.get("/me", response_model=UsuarioOut)
 async def usuario_logado(funcionario: Funcionario = Depends(usuario_atual)) -> UsuarioOut:
     return UsuarioOut.model_validate(funcionario)
+
+
+@router.post(
+    "/senha",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+    responses={422: {"description": "Senha atual incorreta ou nova senha inválida"}},
+)
+async def trocar_senha(
+    dados: TrocaSenhaIn,
+    funcionario: Funcionario = Depends(usuario_atual),
+    service: FuncionarioService = Depends(get_funcionario_service),
+) -> Response:
+    """Troca a senha do próprio usuário (qualquer perfil), conferindo a senha atual."""
+    await service.trocar_propria_senha(funcionario, dados.senha_atual, dados.nova_senha)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

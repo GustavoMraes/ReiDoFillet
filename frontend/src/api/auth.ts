@@ -11,3 +11,7 @@ interface RespostaLogin {
 export function autenticar(login: string, senha: string): Promise<RespostaLogin> {
   return postJson<RespostaLogin>('/auth/login', { login, senha }, { semSessao: true })
 }
+
+export function trocarSenha(senhaAtual: string, novaSenha: string): Promise<void> {
+  return postJson<void>('/auth/senha', { senha_atual: senhaAtual, nova_senha: novaSenha })
+}

@@ -41,6 +41,7 @@ async function requisitar<T>(caminho: string, { metodo = 'GET', corpo, semSessao
     const detalhe = typeof conteudo?.detalhe === 'string' ? conteudo.detalhe : `Erro ${resposta.status}`
     throw new ErroApi(detalhe, resposta.status)
   }
+  if (resposta.status === 204) return undefined as T
   return resposta.json() as Promise<T>
 }
 
@@ -65,4 +66,10 @@ const formatoReal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency
 /** Valores monetários chegam da API como texto decimal ("14.00"). */
 export function emReais(valor: string): string {
   return formatoReal.format(Number(valor))
+}
+
+/** Converte o valor digitado ("60,50" ou "60.50") para o formato da API ("60.50"). */
+export function paraDecimal(texto: string): string {
+  const limpo = texto.trim()
+  return limpo.includes(',') ? limpo.replace(/\./g, '').replace(',', '.') : limpo
 }

@@ -59,6 +59,21 @@ class ItemComandaSnapshot(Snapshot):
     cancelado_por_id: int | None
 
 
+class CategoriaSnapshot(Snapshot):
+    id: int
+    nome: str
+    ordem: int
+
+
+class ProdutoSnapshot(Snapshot):
+    id: int
+    categoria_id: int
+    nome: str
+    preco: Decimal
+    ativo: bool
+    disponivel: bool
+
+
 class ReservaSnapshot(Snapshot):
     """Sem o telefone: dado pessoal desnecessário para o rastro de auditoria."""
 

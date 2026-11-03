@@ -6,10 +6,12 @@ import Layout, { type Aba } from './components/Layout'
 import AvisoContabilidade from './pages/AvisoContabilidade'
 import ComandaPage from './pages/Comanda'
 import Cozinha from './pages/Cozinha'
+import GestaoCardapio from './pages/GestaoCardapio'
 import Login from './pages/Login'
 import MapaMesas from './pages/MapaMesas'
 import PagamentoPage from './pages/Pagamento'
 import Reservas from './pages/Reservas'
+import Usuarios from './pages/Usuarios'
 
 type Tela = Aba
 
@@ -37,11 +39,23 @@ export default function App() {
     )
   }
 
+  const administrador = usuario.perfil === 'ADMIN'
+  const abas: Aba[] = [
+    'Mapa de Mesas',
+    'Reservas',
+    'Comanda',
+    'Cozinha',
+    'Pagamento',
+    'Cardápio',
+    ...(administrador ? (['Usuários'] as Aba[]) : []),
+  ]
   const comComanda = comandaId !== null
   const disponiveis: Aba[] = [
     'Mapa de Mesas',
     'Reservas',
     'Cozinha',
+    'Cardápio',
+    ...(administrador ? (['Usuários'] as Aba[]) : []),
     ...(comComanda ? (['Comanda'] as Aba[]) : []),
     ...(comComanda && statusComanda === 'PRE_CONTA' ? (['Pagamento'] as Aba[]) : []),
   ]
@@ -60,7 +74,7 @@ export default function App() {
   }
 
   return (
-    <Layout abaAtiva={tela} abasDisponiveis={disponiveis} onNavegar={navegar}>
+    <Layout abaAtiva={tela} abas={abas} abasDisponiveis={disponiveis} onNavegar={navegar}>
       {tela === 'Mapa de Mesas' && <MapaMesas onAbrirComanda={abrirComanda} />}
       {tela === 'Reservas' && <Reservas onAbrirComanda={abrirComanda} />}
       {tela === 'Comanda' && comandaId !== null && (
@@ -81,6 +95,8 @@ export default function App() {
         />
       )}
       {tela === 'Cozinha' && <Cozinha />}
+      {tela === 'Cardápio' && <GestaoCardapio administrador={administrador} />}
+      {tela === 'Usuários' && administrador && <Usuarios />}
     </Layout>
   )
 }

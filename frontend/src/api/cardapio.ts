@@ -1,4 +1,4 @@
-import { getJson } from './cliente'
+import { getJson, patchJson } from './cliente'
 
 export interface ProdutoCardapio {
   id: number
@@ -16,4 +16,9 @@ export interface CategoriaCardapio {
 
 export function obterCardapio(): Promise<CategoriaCardapio[]> {
   return getJson<CategoriaCardapio[]>('/cardapio')
+}
+
+/** Esgotado no dia (Funcionário e Administrador). */
+export function definirDisponibilidade(produtoId: number, disponivel: boolean): Promise<ProdutoCardapio> {
+  return patchJson<ProdutoCardapio>(`/produtos/${produtoId}/disponibilidade`, { disponivel })
 }

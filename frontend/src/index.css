@@ -968,6 +968,149 @@ h1 {
   margin: 12px 0 0;
 }
 
+/* Formulários em diálogo */
+
+.form-dialogo {
+  display: grid;
+  gap: 12px;
+}
+
+.campo textarea {
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  background: var(--fundo);
+  color: var(--texto);
+  font: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+.campo input:disabled,
+.campo select:disabled {
+  opacity: 0.6;
+}
+
+.form-dialogo .erro {
+  margin: 0;
+}
+
+.link:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Gestão do cardápio e de usuários */
+
+.grupo-cardapio + .grupo-cardapio {
+  margin-top: 28px;
+}
+
+.titulo-categoria {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 16px;
+  margin-bottom: 10px;
+}
+
+.titulo-categoria h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.acoes-categoria {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.acoes-categoria .link {
+  padding: 4px 2px;
+  font-size: 0.85rem;
+}
+
+.lista-produtos,
+.lista-usuarios {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.produto-gestao,
+.usuario-gestao {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  background: var(--superficie);
+}
+
+.usuario-gestao {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.produto-gestao.inativo,
+.usuario-gestao.bloqueado {
+  opacity: 0.6;
+}
+
+.produto-gestao-info,
+.usuario-gestao-info {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.produto-gestao-info strong,
+.usuario-gestao-info strong {
+  overflow-wrap: anywhere;
+}
+
+.produto-gestao-info small,
+.usuario-gestao-info small {
+  color: var(--texto-suave);
+  font-size: 0.8rem;
+}
+
+.produto-gestao-preco {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.produto-gestao-selos {
+  display: flex;
+  gap: 8px;
+}
+
+.produto-gestao-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.selo-perfil {
+  --cor-status: var(--aguardando);
+}
+
+@media (max-width: 760px) {
+  .produto-gestao,
+  .usuario-gestao {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .produto-gestao-acoes {
+    grid-column: 1 / -1;
+  }
+}
+
 /* Reservas */
 
 .barra-reservas {
@@ -1154,7 +1297,11 @@ h1 {
 
   .usuario {
     order: -1;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px 10px;
     margin-left: auto;
+    white-space: normal;
   }
 
   .abas {

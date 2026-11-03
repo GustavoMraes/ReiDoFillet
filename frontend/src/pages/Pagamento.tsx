@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 
-import { ErroApi, emReais } from '../api/cliente'
+import { ErroApi, emReais, paraDecimal } from '../api/cliente'
 import {
   alterarTaxaServico,
   obterComanda,
@@ -21,12 +21,6 @@ const formatoHora = new Intl.DateTimeFormat('pt-BR', { timeStyle: 'short', timeZ
 
 function mensagemDeErro(erro: unknown): string {
   return erro instanceof ErroApi ? erro.message : 'Não foi possível concluir a operação'
-}
-
-/** Converte o valor digitado ("60,50" ou "60.50") para o formato da API ("60.50"). */
-function paraDecimal(texto: string): string {
-  const limpo = texto.trim()
-  return limpo.includes(',') ? limpo.replace(/\./g, '').replace(',', '.') : limpo
 }
 
 interface Props {

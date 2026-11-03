@@ -22,6 +22,11 @@ class UsuarioOut(BaseModel):
     perfil: Perfil
 
 
+class TrocaSenhaIn(BaseModel):
+    senha_atual: str = Field(max_length=200)
+    nova_senha: str = Field(max_length=200)
+
+
 class LoginOut(BaseModel):
     token: str
     tipo: Literal["bearer"] = "bearer"

@@ -1,4 +1,4 @@
-"""Define a senha de um funcionário existente (até existir a tela de usuários, UC 7.5).
+"""Define a senha de um funcionário existente: primeiro acesso e recuperação de acesso (o dia a dia é pela aba Usuários).
 
 Uso: python -m scripts.definir_senha <login>
 

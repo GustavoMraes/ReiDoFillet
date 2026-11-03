@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import Settings, get_settings
 from app.core.exceptions import registrar_handlers
-from app.routers import auth, cardapio, comandas, cozinha, health, mesas, reservas
+from app.routers import auth, cardapio, comandas, cozinha, gestao_cardapio, health, mesas, reservas, usuarios
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -27,6 +27,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(comandas.router)
     app.include_router(cozinha.router)
     app.include_router(reservas.router)
+    app.include_router(gestao_cardapio.router)
+    app.include_router(usuarios.router)
     return app
 
 

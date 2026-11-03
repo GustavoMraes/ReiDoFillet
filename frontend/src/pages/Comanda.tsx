@@ -22,6 +22,7 @@ import TrocarMesa from '../components/TrocarMesa'
 import { usePolling } from '../hooks/usePolling'
 
 const INTERVALO_ATUALIZACAO_MS = 5000
+const INTERVALO_CARDAPIO_MS = 10000
 
 const ROTULOS_ITEM: Record<StatusItem, string> = {
   PENDENTE: 'Pendente',
@@ -138,7 +139,11 @@ export default function ComandaPage({ comandaId, onVoltar, onStatus, onIrParaPag
   const mostrar = useMensagens()
   const buscarComanda = useCallback(() => obterComanda(comandaId), [comandaId])
   const { dados: comanda, desatualizado, definir } = usePolling<Comanda>(buscarComanda, INTERVALO_ATUALIZACAO_MS)
-  const [cardapio, setCardapio] = useState<CategoriaCardapio[] | null>(null)
+  // Recarregado periodicamente: produto marcado como esgotado em outro dispositivo aparece como indisponível.
+  const { dados: cardapio, definir: definirCardapio } = usePolling<CategoriaCardapio[]>(
+    obterCardapio,
+    INTERVALO_CARDAPIO_MS,
+  )
   const [cupom, setCupom] = useState<Cupom | null>(null)
   const [enviando, setEnviando] = useState(false)
   const [preConta, setPreConta] = useState(false)
@@ -155,13 +160,11 @@ export default function ComandaPage({ comandaId, onVoltar, onStatus, onIrParaPag
     }
   }, [status])
 
-  const carregarCardapio = useCallback(() => {
+  const carregarCardapio = () => {
     obterCardapio()
-      .then(setCardapio)
-      .catch((erro) => mostrar(mensagemDeErro(erro), 'erro'))
-  }, [mostrar])
-
-  useEffect(carregarCardapio, [carregarCardapio])
+      .then(definirCardapio)
+      .catch(() => {}) // o polling tenta de novo
+  }
 
   async function executar(acao: () => Promise<Comanda>, sucesso: string): Promise<boolean> {
     try {
