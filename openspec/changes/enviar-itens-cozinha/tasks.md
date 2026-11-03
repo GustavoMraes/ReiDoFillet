@@ -19,7 +19,7 @@
 ## 4. Implantação e verificação
 
 - [x] 4.1 Rodar `pytest` completo e `npm run build` e verificar que tudo passa
-- [ ] 4.2 Publicar (push na `main`) e verificar na URL pública: abrir uma comanda, enviar itens, imprimir (visualizar) o cupom, marcar pronto e entregue no painel e conferir os status na comanda; ao final, encerrar a comanda de teste diretamente no banco, deixando a mesa livre
+- [x] 4.2 Publicar (push na `main`) e verificar na URL pública: abrir uma comanda, enviar itens, imprimir (visualizar) o cupom, marcar pronto e entregue no painel e conferir os status na comanda; ao final, encerrar a comanda de teste diretamente no banco, deixando a mesa livre
 
 ## Workflow follow-up
 
