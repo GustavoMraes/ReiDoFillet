@@ -54,6 +54,20 @@ async def abrir(cliente: AsyncClient, usuario: UsuarioRef, mesa_id: int) -> Resp
     return await cliente.post(f"/mesas/{mesa_id}/comanda", headers=cabecalho_de(usuario))
 
 
+async def pre_conta(cliente: AsyncClient, usuario: UsuarioRef, comanda_id: int) -> Response:
+    return await cliente.post(f"/comandas/{comanda_id}/pre-conta", headers=cabecalho_de(usuario))
+
+
+async def pagar(cliente: AsyncClient, usuario: UsuarioRef, comanda_id: int, forma: str, valor: str) -> Response:
+    return await cliente.post(
+        f"/comandas/{comanda_id}/pagamentos", json={"forma": forma, "valor": valor}, headers=cabecalho_de(usuario)
+    )
+
+
+async def taxa(cliente: AsyncClient, usuario: UsuarioRef, comanda_id: int, **dados) -> Response:
+    return await cliente.patch(f"/comandas/{comanda_id}/taxa-servico", json=dados, headers=cabecalho_de(usuario))
+
+
 async def enviar(cliente: AsyncClient, usuario: UsuarioRef, comanda_id: int) -> Response:
     return await cliente.post(f"/comandas/{comanda_id}/enviar", headers=cabecalho_de(usuario))
 

@@ -1,4 +1,4 @@
-import { getJson, patchJson, postJson } from './cliente'
+import { deleteJson, getJson, patchJson, postJson } from './cliente'
 
 export type StatusItem = 'PENDENTE' | 'EM_PREPARO' | 'PRONTO' | 'ENTREGUE' | 'CANCELADO'
 
@@ -13,14 +13,57 @@ export interface ItemComanda {
   status: StatusItem
 }
 
+export type FormaPagamento = 'PIX' | 'CREDITO' | 'DEBITO' | 'DINHEIRO'
+
+export interface Pagamento {
+  id: number
+  forma: FormaPagamento
+  valor: string
+  registrado_por: string | null
+  registrado_em: string
+}
+
 export interface Comanda {
   id: number
   mesa: { id: number; numero: number }
   responsavel: { id: number; nome: string } | null
   status: 'ABERTA' | 'PRE_CONTA' | 'FECHADA' | 'CANCELADA'
   aberta_em: string
+  pre_conta_em: string | null
   itens: ItemComanda[]
+  subtotal: string
+  taxa_servico: { aplicada: boolean; percentual: string | null; valor: string }
   total: string
+  pago: string
+  restante: string
+  pagamentos: Pagamento[]
+}
+
+export const ROTULOS_FORMA: Record<FormaPagamento, string> = {
+  PIX: 'PIX',
+  CREDITO: 'Cartão de Crédito',
+  DEBITO: 'Cartão de Débito',
+  DINHEIRO: 'Dinheiro',
+}
+
+export function gerarPreConta(comandaId: number): Promise<{ comanda: Comanda; aviso: string | null }> {
+  return postJson<{ comanda: Comanda; aviso: string | null }>(`/comandas/${comandaId}/pre-conta`)
+}
+
+export function alterarTaxaServico(comandaId: number, alteracao: { aplicada?: boolean; percentual?: string }) {
+  return patchJson<Comanda>(`/comandas/${comandaId}/taxa-servico`, alteracao)
+}
+
+export function registrarPagamento(comandaId: number, forma: FormaPagamento, valor: string): Promise<Comanda> {
+  return postJson<Comanda>(`/comandas/${comandaId}/pagamentos`, { forma, valor })
+}
+
+export function removerPagamento(comandaId: number, pagamentoId: number): Promise<Comanda> {
+  return deleteJson<Comanda>(`/comandas/${comandaId}/pagamentos/${pagamentoId}`)
+}
+
+export function cancelarComanda(comandaId: number): Promise<Comanda> {
+  return postJson<Comanda>(`/comandas/${comandaId}/cancelar`)
 }
 
 export interface Cupom {

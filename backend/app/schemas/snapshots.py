@@ -35,6 +35,16 @@ class ComandaSnapshot(Snapshot):
     mesa_id: int
     funcionario_id: int | None
     status: str
+    taxa_servico_pct: Decimal | None
+    taxa_servico_aplicada: bool
+
+
+class PagamentoSnapshot(Snapshot):
+    id: int
+    comanda_id: int
+    forma: str
+    valor: Decimal
+    registrado_por_id: int | None
 
 
 class ItemComandaSnapshot(Snapshot):

@@ -12,7 +12,7 @@ export class ErroApi extends Error {
 }
 
 interface Opcoes {
-  metodo?: 'GET' | 'POST' | 'PATCH'
+  metodo?: 'GET' | 'POST' | 'PATCH' | 'DELETE'
   corpo?: unknown
   /** Na chamada de login, um 401 é erro de credencial, não sessão expirada. */
   semSessao?: boolean
@@ -54,6 +54,10 @@ export function postJson<T>(caminho: string, corpo?: unknown, opcoes: Omit<Opcoe
 
 export function patchJson<T>(caminho: string, corpo: unknown): Promise<T> {
   return requisitar<T>(caminho, { metodo: 'PATCH', corpo })
+}
+
+export function deleteJson<T>(caminho: string): Promise<T> {
+  return requisitar<T>(caminho, { metodo: 'DELETE' })
 }
 
 const formatoReal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })

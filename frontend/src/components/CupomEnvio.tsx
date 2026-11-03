@@ -11,7 +11,7 @@ export default function CupomEnvio({ cupom, onFechar }: { cupom: Cupom; onFechar
   return (
     <div className="sobreposicao" role="dialog" aria-modal="true" aria-label="Cupom do envio à cozinha">
       <div className="cupom-moldura">
-        <article className="cupom">
+        <article className="cupom impressao">
           <header>
             <strong>REI DO FILET</strong>
             <span>Pedido para a cozinha</span>

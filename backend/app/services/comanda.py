@@ -6,18 +6,28 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import Conflito, DadoInvalido, RecursoNaoEncontrado, SemPermissao
 from app.core.tempo import Relogio, para_exibicao
 from app.db.transacao import transacao
-from app.models import Comanda, Funcionario, ItemComanda
-from app.models.enums import Perfil, StatusComanda, StatusItem, StatusMesa
+from app.models import Comanda, Funcionario, ItemComanda, Pagamento
+from app.models.enums import STATUS_COMANDA_ATIVA, FormaPagamento, Perfil, StatusComanda, StatusItem, StatusMesa
 from app.repositories.cardapio import CardapioRepository
 from app.repositories.comanda import ComandaRepository
-from app.schemas.comanda import ComandaOut, CupomItemOut, CupomOut, ItemComandaOut, MesaResumoOut, ResponsavelOut
-from app.schemas.snapshots import ComandaSnapshot, ItemComandaSnapshot
+from app.schemas.comanda import (
+    ComandaOut,
+    CupomItemOut,
+    CupomOut,
+    ItemComandaOut,
+    MesaResumoOut,
+    PagamentoOut,
+    ResponsavelOut,
+    TaxaServicoOut,
+)
+from app.schemas.snapshots import ComandaSnapshot, ItemComandaSnapshot, PagamentoSnapshot
 from app.services.auditoria import Acao, AuditoriaService
+from app.services.financeiro import ResumoFinanceiro, calcular, em_centavos, em_reais
 from app.services.mesa import MesaService
 
 QUANTIDADE_MAXIMA = 99
 TAMANHO_MAXIMO_OBSERVACAO = 200
-CENTAVOS = Decimal("0.01")
+STATUS_ITEM_NAO_ENTREGUE = (StatusItem.PENDENTE, StatusItem.EM_PREPARO, StatusItem.PRONTO)
 
 
 def _validar_quantidade(quantidade: int) -> None:
@@ -91,12 +101,18 @@ class ComandaService:
 
     async def detalhar(self, comanda: Comanda) -> ComandaOut:
         numero_mesa, nome_responsavel = await self.comandas.cabecalho(comanda)
+        itens_com_produto = await self.comandas.itens_com_produto(comanda.id)
+        pagamentos = await self.comandas.pagamentos_com_responsavel(comanda.id)
+        resumo = calcular(
+            comanda.status,
+            [(item.preco_unitario, item.quantidade, item.status) for item, _ in itens_com_produto],
+            comanda.taxa_servico_pct,
+            comanda.taxa_servico_aplicada,
+            [pagamento.valor for pagamento, _ in pagamentos],
+        )
         itens = []
-        total = Decimal("0")
-        for item, produto_nome in await self.comandas.itens_com_produto(comanda.id):
-            subtotal = (item.preco_unitario * item.quantidade).quantize(CENTAVOS)
-            if item.status != StatusItem.CANCELADO:
-                total += subtotal
+        for item, produto_nome in itens_com_produto:
+            subtotal = em_centavos(item.preco_unitario * item.quantidade)
             itens.append(
                 ItemComandaOut(
                     id=item.id,
@@ -119,8 +135,25 @@ class ComandaService:
             ),
             status=comanda.status,
             aberta_em=para_exibicao(comanda.aberta_em),
+            pre_conta_em=para_exibicao(comanda.pre_conta_em) if comanda.pre_conta_em else None,
             itens=itens,
-            total=total.quantize(CENTAVOS),
+            subtotal=resumo.subtotal,
+            taxa_servico=TaxaServicoOut(
+                aplicada=resumo.taxa_aplicada, percentual=resumo.taxa_percentual, valor=resumo.taxa_valor
+            ),
+            total=resumo.total,
+            pago=resumo.pago,
+            restante=resumo.restante,
+            pagamentos=[
+                PagamentoOut(
+                    id=pagamento.id,
+                    forma=pagamento.forma,
+                    valor=pagamento.valor,
+                    registrado_por=nome,
+                    registrado_em=para_exibicao(pagamento.registrado_em),
+                )
+                for pagamento, nome in pagamentos
+            ],
         )
 
     # --- Itens ---
@@ -131,7 +164,7 @@ class ComandaService:
         _validar_quantidade(quantidade)
         observacao = _normalizar_observacao(observacao)
         async with transacao(self.session):
-            comanda = await self._comanda_aberta_bloqueada(comanda_id, "A comanda não está aberta para novos itens")
+            comanda = await self._comanda_ativa_bloqueada(comanda_id, "A comanda não está aberta para novos itens")
             produto = await self.cardapio.obter_produto(produto_id)
             if produto is None:
                 raise RecursoNaoEncontrado("Produto não encontrado")
@@ -167,6 +200,7 @@ class ComandaService:
                 self.session.add(item)
                 await self.session.flush()
                 self._auditar(usuario, Acao.CRIAR, "ItemComanda", item.id, None, ItemComandaSnapshot.model_validate(item))
+            self._invalidar_pre_conta(comanda, usuario)
         return comanda
 
     async def alterar_item(
@@ -182,7 +216,7 @@ class ComandaService:
         if observacao is not None:
             observacao = _normalizar_observacao(observacao)
         async with transacao(self.session):
-            comanda = await self._comanda_aberta_bloqueada(comanda_id, "A comanda não está aberta para alterações")
+            comanda = await self._comanda_ativa_bloqueada(comanda_id, "A comanda não está aberta para alterações")
             item = await self._item(comanda_id, item_id)
             if item.status != StatusItem.PENDENTE:
                 raise Conflito("Apenas itens pendentes podem ser alterados")
@@ -192,11 +226,12 @@ class ComandaService:
             if observacao is not None:
                 item.observacao = observacao
             self._auditar(usuario, Acao.ALTERAR, "ItemComanda", item.id, antes, ItemComandaSnapshot.model_validate(item))
+            self._invalidar_pre_conta(comanda, usuario)
         return comanda
 
     async def cancelar_item(self, comanda_id: int, item_id: int, usuario: Funcionario) -> Comanda:
         async with transacao(self.session):
-            comanda = await self._comanda_aberta_bloqueada(comanda_id, "A comanda não está aberta para alterações")
+            comanda = await self._comanda_ativa_bloqueada(comanda_id, "A comanda não está aberta para alterações")
             item = await self._item(comanda_id, item_id)
             if item.status == StatusItem.CANCELADO:
                 raise Conflito("Item já cancelado")
@@ -207,6 +242,7 @@ class ComandaService:
             item.cancelado_em = self.relogio.agora()
             item.cancelado_por_id = usuario.id
             self._auditar(usuario, Acao.CANCELAR, "ItemComanda", item.id, antes, ItemComandaSnapshot.model_validate(item))
+            self._invalidar_pre_conta(comanda, usuario)
         return comanda
 
     # --- Envio à cozinha ---
@@ -239,15 +275,160 @@ class ComandaService:
             )
         return comanda, cupom
 
+    # --- Pré-conta e ciclo da comanda ---
+
+    async def gerar_pre_conta(self, comanda_id: int, usuario: Funcionario) -> tuple[Comanda, str | None]:
+        """Passa a comanda a PRE_CONTA. Devolve um aviso se ainda houver itens não entregues (não bloqueia)."""
+        async with transacao(self.session):
+            comanda = await self._comanda_aberta_bloqueada(
+                comanda_id, "A pré-conta só pode ser gerada para uma comanda aberta"
+            )
+            ativos = [i for i in await self.comandas.itens(comanda_id) if i.status != StatusItem.CANCELADO]
+            if not ativos:
+                raise Conflito("A comanda não tem itens para a pré-conta")
+
+            antes = ComandaSnapshot.model_validate(comanda)
+            # Só a primeira pré-conta copia a taxa padrão; as seguintes mantêm a escolha anterior.
+            if comanda.taxa_servico_pct is None:
+                comanda.taxa_servico_pct = await self.comandas.taxa_servico_padrao()
+            comanda.status = StatusComanda.PRE_CONTA
+            comanda.pre_conta_em = self.relogio.agora()
+            self._auditar(usuario, Acao.PRE_CONTA, "Comanda", comanda.id, antes, ComandaSnapshot.model_validate(comanda))
+
+            nao_entregues = sum(1 for i in ativos if i.status in STATUS_ITEM_NAO_ENTREGUE)
+        aviso = (
+            f"Atenção: {nao_entregues} item(ns) ainda não entregue(s) (pendente, em preparo ou pronto)."
+            if nao_entregues
+            else None
+        )
+        return comanda, aviso
+
+    async def cancelar_comanda(self, comanda_id: int, usuario: Funcionario) -> Comanda:
+        """Libera uma mesa aberta por engano: só sem itens ativos e sem pagamentos."""
+        async with transacao(self.session):
+            comanda = await self._comanda_ativa_bloqueada(comanda_id, "A comanda não pode mais ser cancelada")
+            if any(i.status != StatusItem.CANCELADO for i in await self.comandas.itens(comanda_id)):
+                raise Conflito("Cancele os itens antes de cancelar a comanda")
+            if await self.comandas.pagamentos(comanda_id):
+                raise Conflito("Remova os pagamentos antes de cancelar a comanda")
+            antes = ComandaSnapshot.model_validate(comanda)
+            comanda.status = StatusComanda.CANCELADA
+            comanda.fechada_em = self.relogio.agora()
+            self._auditar(usuario, Acao.CANCELAR, "Comanda", comanda.id, antes, ComandaSnapshot.model_validate(comanda))
+        return comanda
+
+    # --- Taxa de serviço e pagamentos ---
+
+    async def alterar_taxa_servico(
+        self, comanda_id: int, aplicada: bool | None, percentual: Decimal | None, usuario: Funcionario
+    ) -> Comanda:
+        if percentual is not None and not Decimal("0") <= percentual <= Decimal("100"):
+            raise DadoInvalido("O percentual da taxa de serviço deve estar entre 0 e 100")
+        async with transacao(self.session):
+            comanda = await self._comanda_bloqueada(
+                comanda_id, (StatusComanda.PRE_CONTA,), "A taxa de serviço só pode ser alterada na pré-conta"
+            )
+            novo_percentual = em_centavos(percentual) if percentual is not None else comanda.taxa_servico_pct
+            nova_aplicada = aplicada if aplicada is not None else comanda.taxa_servico_aplicada
+            resumo = await self._resumo(comanda, percentual=novo_percentual, aplicada=nova_aplicada)
+            if resumo.total < resumo.pago:
+                raise Conflito(f"O total não pode ficar menor que o valor já pago ({em_reais(resumo.pago)})")
+
+            antes = ComandaSnapshot.model_validate(comanda)
+            comanda.taxa_servico_pct = novo_percentual
+            comanda.taxa_servico_aplicada = nova_aplicada
+            self._auditar(usuario, Acao.ALTERAR, "Comanda", comanda.id, antes, ComandaSnapshot.model_validate(comanda))
+            if resumo.pago > 0 and resumo.restante == 0:
+                self._fechar(comanda, usuario)
+        return comanda
+
+    async def registrar_pagamento(
+        self, comanda_id: int, forma: FormaPagamento, valor: Decimal, usuario: Funcionario
+    ) -> Comanda:
+        if valor <= 0:
+            raise DadoInvalido("O valor do pagamento deve ser maior que zero")
+        valor = em_centavos(valor)
+        async with transacao(self.session):
+            comanda = await self._comanda_bloqueada(
+                comanda_id, (*STATUS_COMANDA_ATIVA,), "A comanda já está encerrada"
+            )
+            if comanda.status != StatusComanda.PRE_CONTA:
+                raise Conflito("Gere a pré-conta antes de registrar pagamentos")
+            resumo = await self._resumo(comanda)
+            if valor > resumo.restante:
+                raise Conflito(f"O valor excede o restante a pagar ({em_reais(resumo.restante)})")
+
+            pagamento = Pagamento(
+                comanda_id=comanda.id,
+                forma=forma,
+                valor=valor,
+                registrado_por_id=usuario.id,
+                registrado_em=self.relogio.agora(),
+            )
+            self.session.add(pagamento)
+            await self.session.flush()
+            self._auditar(usuario, Acao.PAGAR, "Pagamento", pagamento.id, None, PagamentoSnapshot.model_validate(pagamento))
+            if valor == resumo.restante:
+                self._fechar(comanda, usuario)
+        return comanda
+
+    async def remover_pagamento(self, comanda_id: int, pagamento_id: int, usuario: Funcionario) -> Comanda:
+        async with transacao(self.session):
+            comanda = await self.comandas.obter_para_atualizar(comanda_id)
+            if comanda is None:
+                raise RecursoNaoEncontrado("Comanda não encontrada")
+            pagamento = await self.comandas.obter_pagamento(comanda_id, pagamento_id)
+            if pagamento is None:
+                raise RecursoNaoEncontrado("Pagamento não encontrado")
+            if comanda.status not in STATUS_COMANDA_ATIVA:
+                raise Conflito("Pagamentos de comanda fechada não podem ser removidos")
+            antes = PagamentoSnapshot.model_validate(pagamento)
+            await self.session.delete(pagamento)
+            self._auditar(usuario, Acao.REMOVER_PAGAMENTO, "Pagamento", pagamento_id, antes, None)
+        return comanda
+
     # --- Auxiliares ---
 
-    async def _comanda_aberta_bloqueada(self, comanda_id: int, mensagem_nao_aberta: str) -> Comanda:
+    async def _comanda_bloqueada(self, comanda_id: int, permitidos: tuple[StatusComanda, ...], mensagem: str) -> Comanda:
         comanda = await self.comandas.obter_para_atualizar(comanda_id)
         if comanda is None:
             raise RecursoNaoEncontrado("Comanda não encontrada")
-        if comanda.status != StatusComanda.ABERTA:
-            raise Conflito(mensagem_nao_aberta)
+        if comanda.status not in permitidos:
+            raise Conflito(mensagem)
         return comanda
+
+    async def _comanda_aberta_bloqueada(self, comanda_id: int, mensagem_nao_aberta: str) -> Comanda:
+        return await self._comanda_bloqueada(comanda_id, (StatusComanda.ABERTA,), mensagem_nao_aberta)
+
+    async def _comanda_ativa_bloqueada(self, comanda_id: int, mensagem: str) -> Comanda:
+        return await self._comanda_bloqueada(comanda_id, STATUS_COMANDA_ATIVA, mensagem)
+
+    def _invalidar_pre_conta(self, comanda: Comanda, usuario: Funcionario) -> None:
+        """A pré-conta é um retrato: qualquer mudança nos itens devolve a comanda para ABERTA."""
+        if comanda.status != StatusComanda.PRE_CONTA:
+            return
+        antes = ComandaSnapshot.model_validate(comanda)
+        comanda.status = StatusComanda.ABERTA
+        comanda.pre_conta_em = None
+        self._auditar(usuario, Acao.ALTERAR, "Comanda", comanda.id, antes, ComandaSnapshot.model_validate(comanda))
+
+    def _fechar(self, comanda: Comanda, usuario: Funcionario) -> None:
+        antes = ComandaSnapshot.model_validate(comanda)
+        comanda.status = StatusComanda.FECHADA
+        comanda.fechada_em = self.relogio.agora()
+        self._auditar(usuario, Acao.ALTERAR, "Comanda", comanda.id, antes, ComandaSnapshot.model_validate(comanda))
+
+    async def _resumo(
+        self, comanda: Comanda, percentual: Decimal | None = None, aplicada: bool | None = None
+    ) -> ResumoFinanceiro:
+        """Resumo atual, ou com uma taxa hipotética (para validar a mudança antes de aplicá-la)."""
+        return calcular(
+            comanda.status,
+            [(i.preco_unitario, i.quantidade, i.status) for i in await self.comandas.itens(comanda.id)],
+            percentual if percentual is not None else comanda.taxa_servico_pct,
+            aplicada if aplicada is not None else comanda.taxa_servico_aplicada,
+            [p.valor for p in await self.comandas.pagamentos(comanda.id)],
+        )
 
     async def _item(self, comanda_id: int, item_id: int) -> ItemComanda:
         item = await self.comandas.obter_item(comanda_id, item_id)

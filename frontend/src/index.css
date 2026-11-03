@@ -645,18 +645,159 @@ h1 {
   gap: 8px;
 }
 
+.linha-valor {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+}
+
+.cupom .linha-valor {
+  display: flex;
+}
+
+.cupom-totais {
+  display: grid;
+  gap: 4px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #000;
+}
+
+.cupom-total {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* Pré-conta e pagamento */
+
+.faixa-pre-conta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--aguardando);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--aguardando) 12%, transparent);
+  font-size: 0.9rem;
+}
+
+.faixa-pre-conta div {
+  display: flex;
+  gap: 8px;
+}
+
+.colunas-pagamento {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 20px;
+  align-items: start;
+}
+
+.colunas-pagamento .painel-comanda {
+  position: static;
+}
+
+.resumo-itens {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0 0 10px;
+  border-bottom: 1px solid var(--borda);
+  list-style: none;
+  font-size: 0.9rem;
+}
+
+.taxa {
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.taxa label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.percentual {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  color: var(--texto-suave);
+}
+
+.percentual input {
+  width: 56px;
+  padding: 4px 6px;
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  background: var(--fundo);
+  color: var(--texto);
+  font: inherit;
+  text-align: right;
+}
+
+.restante strong {
+  color: var(--aguardando);
+}
+
+.formas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.forma {
+  padding: 12px 8px;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--texto);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.forma.selecionada {
+  border-color: var(--marca);
+  background: color-mix(in srgb, var(--marca) 20%, transparent);
+  font-weight: 600;
+}
+
+.campo-valor {
+  display: grid;
+  gap: 6px;
+  color: var(--texto-suave);
+  font-size: 0.8rem;
+}
+
+.campo-valor input {
+  padding: 10px 12px;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  background: var(--fundo);
+  color: var(--texto);
+  font: inherit;
+  font-size: 1.1rem;
+}
+
 .cupom-acoes .secundario {
   background: var(--superficie);
 }
 
-/* Na impressão, só o cupom aparece, em coluna estreita para impressoras térmicas. */
+/* Na impressão, só o documento marcado com .impressao (cupom ou pré-conta) aparece,
+   em coluna estreita para impressoras térmicas. */
 @media print {
   body * {
     visibility: hidden;
   }
 
-  .cupom,
-  .cupom * {
+  .impressao,
+  .impressao * {
     visibility: visible;
   }
 
@@ -666,7 +807,7 @@ h1 {
     background: none;
   }
 
-  .cupom {
+  .impressao {
     position: absolute;
     top: 0;
     left: 0;
@@ -749,7 +890,8 @@ h1 {
 }
 
 @media (max-width: 860px) {
-  .colunas-cozinha {
+  .colunas-cozinha,
+  .colunas-pagamento {
     grid-template-columns: 1fr;
   }
 

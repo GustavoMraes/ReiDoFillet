@@ -10,7 +10,15 @@ from app.repositories.cardapio import CardapioRepository
 from app.repositories.comanda import ComandaRepository
 from app.repositories.mesa import MesaRepository
 from app.routers.dependencias import exigir_perfis
-from app.schemas.comanda import ComandaOut, EnvioOut, ItemAlteracaoIn, ItemIn
+from app.schemas.comanda import (
+    ComandaOut,
+    EnvioOut,
+    ItemAlteracaoIn,
+    ItemIn,
+    PagamentoIn,
+    PreContaOut,
+    TaxaServicoIn,
+)
 from app.services.auditoria import AuditoriaService
 from app.services.comanda import ComandaService
 from app.services.mesa import MesaService
@@ -95,6 +103,64 @@ async def enviar_para_cozinha(
     """Envia todos os itens pendentes à cozinha (passam a EM_PREPARO) e devolve o cupom do envio."""
     comanda, cupom = await service.enviar(comanda_id, usuario)
     return EnvioOut(comanda=await service.detalhar(comanda), cupom=cupom)
+
+
+@router.post("/comandas/{comanda_id}/pre-conta", response_model=PreContaOut, responses=ERROS)
+async def gerar_pre_conta(
+    comanda_id: int,
+    usuario: Funcionario = Depends(atendente),
+    service: ComandaService = Depends(get_comanda_service),
+) -> PreContaOut:
+    """Passa a comanda a PRE_CONTA (mesa Aguardando pagamento). `aviso` indica itens ainda não entregues."""
+    comanda, aviso = await service.gerar_pre_conta(comanda_id, usuario)
+    return PreContaOut(comanda=await service.detalhar(comanda), aviso=aviso)
+
+
+@router.patch("/comandas/{comanda_id}/taxa-servico", response_model=ComandaOut, responses=ERROS)
+async def alterar_taxa_servico(
+    comanda_id: int,
+    dados: TaxaServicoIn,
+    usuario: Funcionario = Depends(atendente),
+    service: ComandaService = Depends(get_comanda_service),
+) -> ComandaOut:
+    """Liga/desliga a taxa de serviço ou ajusta o percentual (0 a 100), só na pré-conta."""
+    comanda = await service.alterar_taxa_servico(comanda_id, dados.aplicada, dados.percentual, usuario)
+    return await service.detalhar(comanda)
+
+
+@router.post("/comandas/{comanda_id}/pagamentos", response_model=ComandaOut, responses=ERROS)
+async def registrar_pagamento(
+    comanda_id: int,
+    dados: PagamentoIn,
+    usuario: Funcionario = Depends(atendente),
+    service: ComandaService = Depends(get_comanda_service),
+) -> ComandaOut:
+    """Registra um pagamento feito nas máquinas do estabelecimento; fecha a comanda quando o total é quitado."""
+    comanda = await service.registrar_pagamento(comanda_id, dados.forma, dados.valor, usuario)
+    return await service.detalhar(comanda)
+
+
+@router.delete("/comandas/{comanda_id}/pagamentos/{pagamento_id}", response_model=ComandaOut, responses=ERROS)
+async def remover_pagamento(
+    comanda_id: int,
+    pagamento_id: int,
+    usuario: Funcionario = Depends(atendente),
+    service: ComandaService = Depends(get_comanda_service),
+) -> ComandaOut:
+    """Remove um pagamento registrado por engano, antes do fechamento (fica na auditoria)."""
+    comanda = await service.remover_pagamento(comanda_id, pagamento_id, usuario)
+    return await service.detalhar(comanda)
+
+
+@router.post("/comandas/{comanda_id}/cancelar", response_model=ComandaOut, responses=ERROS)
+async def cancelar_comanda(
+    comanda_id: int,
+    usuario: Funcionario = Depends(atendente),
+    service: ComandaService = Depends(get_comanda_service),
+) -> ComandaOut:
+    """Cancela uma comanda sem itens ativos e sem pagamentos, liberando a mesa."""
+    comanda = await service.cancelar_comanda(comanda_id, usuario)
+    return await service.detalhar(comanda)
 
 
 @router.post(

@@ -1,8 +1,14 @@
+from decimal import Decimal
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Comanda, Funcionario, ItemComanda, Mesa, Produto
+from app.models import Comanda, Funcionario, ItemComanda, Mesa, Pagamento, Parametro, Produto
 from app.models.enums import STATUS_COMANDA_ATIVA
+from app.models.parametro import TAXA_SERVICO_PADRAO
+
+# Usada só se o parâmetro não existir no banco (o seed sempre o cria).
+TAXA_SERVICO_SEM_PARAMETRO = Decimal("10.00")
 
 
 class ComandaRepository:
@@ -54,3 +60,24 @@ class ComandaRepository:
     async def obter_item(self, comanda_id: int, item_id: int) -> ItemComanda | None:
         item = await self.session.get(ItemComanda, item_id)
         return item if item is not None and item.comanda_id == comanda_id else None
+
+    async def pagamentos_com_responsavel(self, comanda_id: int) -> list[tuple[Pagamento, str | None]]:
+        resultado = await self.session.execute(
+            select(Pagamento, Funcionario.nome)
+            .outerjoin(Funcionario, Funcionario.id == Pagamento.registrado_por_id)
+            .where(Pagamento.comanda_id == comanda_id)
+            .order_by(Pagamento.registrado_em, Pagamento.id)
+        )
+        return [(pagamento, nome) for pagamento, nome in resultado]
+
+    async def pagamentos(self, comanda_id: int) -> list[Pagamento]:
+        resultado = await self.session.execute(select(Pagamento).where(Pagamento.comanda_id == comanda_id))
+        return list(resultado.scalars())
+
+    async def obter_pagamento(self, comanda_id: int, pagamento_id: int) -> Pagamento | None:
+        pagamento = await self.session.get(Pagamento, pagamento_id)
+        return pagamento if pagamento is not None and pagamento.comanda_id == comanda_id else None
+
+    async def taxa_servico_padrao(self) -> Decimal:
+        parametro = await self.session.get(Parametro, TAXA_SERVICO_PADRAO)
+        return Decimal(parametro.valor) if parametro is not None else TAXA_SERVICO_SEM_PARAMETRO

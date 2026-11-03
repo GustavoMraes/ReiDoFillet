@@ -5,8 +5,10 @@ import { ErroApi, emReais } from '../api/cliente'
 import {
   adicionarItem,
   alterarItem,
+  cancelarComanda,
   cancelarItem,
   enviarComanda,
+  gerarPreConta,
   obterComanda,
   type Comanda,
   type Cupom,
@@ -14,6 +16,7 @@ import {
   type StatusItem,
 } from '../api/comandas'
 import CupomEnvio from '../components/CupomEnvio'
+import PreContaImpressao from '../components/PreContaImpressao'
 import { useMensagens } from '../components/Mensagens'
 import { usePolling } from '../hooks/usePolling'
 
@@ -122,13 +125,33 @@ function ItemLinha({ item, onAlterar, onCancelar }: {
   )
 }
 
-export default function ComandaPage({ comandaId, onVoltar }: { comandaId: number; onVoltar: () => void }) {
+interface Props {
+  comandaId: number
+  onVoltar: () => void
+  onStatus: (status: Comanda['status']) => void
+  onIrParaPagamento: () => void
+  onEncerrada: () => void
+}
+
+export default function ComandaPage({ comandaId, onVoltar, onStatus, onIrParaPagamento, onEncerrada }: Props) {
   const mostrar = useMensagens()
   const buscarComanda = useCallback(() => obterComanda(comandaId), [comandaId])
   const { dados: comanda, desatualizado, definir } = usePolling<Comanda>(buscarComanda, INTERVALO_ATUALIZACAO_MS)
   const [cardapio, setCardapio] = useState<CategoriaCardapio[] | null>(null)
   const [cupom, setCupom] = useState<Cupom | null>(null)
   const [enviando, setEnviando] = useState(false)
+  const [preConta, setPreConta] = useState(false)
+
+  const status = comanda?.status
+  useEffect(() => {
+    if (!status) return
+    onStatus(status)
+    // Encerrada em outro dispositivo (paga ou cancelada): não há mais o que fazer nesta tela.
+    if (status === 'FECHADA' || status === 'CANCELADA') {
+      mostrar(`A comanda da mesa ${comanda?.mesa.numero} foi encerrada`)
+      onEncerrada()
+    }
+  }, [status])
 
   const carregarCardapio = useCallback(() => {
     obterCardapio()
@@ -156,6 +179,31 @@ export default function ComandaPage({ comandaId, onVoltar }: { comandaId: number
 
   const ativos = comanda.itens.filter((item) => item.status !== 'CANCELADO')
   const temPendentes = comanda.itens.some((item) => item.status === 'PENDENTE')
+  const emPreConta = comanda.status === 'PRE_CONTA'
+
+  async function gerarPre() {
+    if (!comanda) return
+    try {
+      const resposta = await gerarPreConta(comanda.id)
+      definir(resposta.comanda)
+      setPreConta(true)
+      mostrar('Pré-conta gerada. Mesa aguardando pagamento.')
+      if (resposta.aviso) mostrar(resposta.aviso, 'erro')
+    } catch (erro) {
+      mostrar(mensagemDeErro(erro), 'erro')
+    }
+  }
+
+  async function cancelar() {
+    if (!comanda || !window.confirm(`Cancelar a comanda da mesa ${comanda.mesa.numero}? A mesa ficará livre.`)) return
+    try {
+      await cancelarComanda(comanda.id)
+      mostrar(`Comanda cancelada. Mesa ${comanda.mesa.numero} liberada.`)
+      onEncerrada()
+    } catch (erro) {
+      mostrar(mensagemDeErro(erro), 'erro')
+    }
+  }
 
   async function enviar() {
     if (!comanda) return
@@ -188,6 +236,22 @@ export default function ComandaPage({ comandaId, onVoltar }: { comandaId: number
         <p className="aviso" role="alert">
           Não foi possível atualizar a comanda. Os dados exibidos podem estar desatualizados; tentando novamente…
         </p>
+      )}
+
+      {emPreConta && (
+        <div className="faixa-pre-conta" role="status">
+          <span>
+            <strong>Aguardando pagamento</strong> · total {emReais(comanda.total)} · restante {emReais(comanda.restante)}
+          </span>
+          <div>
+            <button className="secundario" onClick={() => setPreConta(true)}>
+              Ver pré-conta
+            </button>
+            <button className="primario" onClick={onIrParaPagamento}>
+              Ir para o pagamento
+            </button>
+          </div>
+        </div>
       )}
 
       <div className="colunas-comanda">
@@ -240,13 +304,25 @@ export default function ComandaPage({ comandaId, onVoltar }: { comandaId: number
           <button className="primario" onClick={enviar} disabled={!temPendentes || enviando}>
             {enviando ? 'Enviando…' : 'Enviar itens para a cozinha'}
           </button>
-          <button className="secundario" disabled title="Disponível em um próximo incremento">
-            Gerar pré-conta
-          </button>
+          {emPreConta ? (
+            <button className="secundario" onClick={onIrParaPagamento}>
+              Ir para o pagamento
+            </button>
+          ) : (
+            <button className="secundario" onClick={gerarPre} disabled={ativos.length === 0}>
+              Gerar pré-conta
+            </button>
+          )}
+          {ativos.length === 0 && (
+            <button className="link" onClick={cancelar}>
+              Cancelar comanda (mesa aberta por engano)
+            </button>
+          )}
         </aside>
       </div>
 
       {cupom && <CupomEnvio cupom={cupom} onFechar={() => setCupom(null)} />}
+      {preConta && emPreConta && <PreContaImpressao comanda={comanda} onFechar={() => setPreConta(false)} />}
     </section>
   )
 }

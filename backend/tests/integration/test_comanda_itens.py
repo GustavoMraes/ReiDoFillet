@@ -72,9 +72,10 @@ async def test_observacao_longa(cenario):
     assert (resposta.status_code, resposta.json()) == (422, {"detalhe": "A observação deve ter no máximo 200 caracteres"})
 
 
-async def test_comanda_que_nao_esta_aberta(cenario, session: AsyncSession):
+@pytest.mark.parametrize("status", ["FECHADA", "CANCELADA"])
+async def test_comanda_que_nao_esta_aberta(cenario, session: AsyncSession, status):
     amb, cliente, comanda_id = cenario
-    await session.execute(update(Comanda).where(Comanda.id == comanda_id).values(status="PRE_CONTA"))
+    await session.execute(update(Comanda).where(Comanda.id == comanda_id).values(status=status))
     await session.commit()
 
     resposta = await adicionar(cliente, amb.gabriela, comanda_id, amb.produtos["Refrigerante Lata"])

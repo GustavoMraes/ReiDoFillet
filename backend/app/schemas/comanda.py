@@ -3,6 +3,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, model_validator
 
+from app.models.enums import FormaPagamento
+
 
 class MesaResumoOut(BaseModel):
     id: int
@@ -25,14 +27,57 @@ class ItemComandaOut(BaseModel):
     status: str
 
 
+class TaxaServicoOut(BaseModel):
+    aplicada: bool
+    percentual: Decimal | None
+    valor: Decimal
+
+
+class PagamentoOut(BaseModel):
+    id: int
+    forma: str
+    valor: Decimal
+    registrado_por: str | None
+    registrado_em: datetime
+
+
 class ComandaOut(BaseModel):
     id: int
     mesa: MesaResumoOut
     responsavel: ResponsavelOut | None
     status: str
     aberta_em: datetime
+    pre_conta_em: datetime | None
     itens: list[ItemComandaOut]
+    subtotal: Decimal
+    taxa_servico: TaxaServicoOut
     total: Decimal
+    pago: Decimal
+    restante: Decimal
+    pagamentos: list[PagamentoOut]
+
+
+class PreContaOut(BaseModel):
+    comanda: ComandaOut
+    aviso: str | None
+
+
+class TaxaServicoIn(BaseModel):
+    """Faixa do percentual validada no serviço, com mensagem em português."""
+
+    aplicada: bool | None = None
+    percentual: Decimal | None = None
+
+    @model_validator(mode="after")
+    def exige_alguma_alteracao(self) -> "TaxaServicoIn":
+        if self.aplicada is None and self.percentual is None:
+            raise ValueError("Informe se a taxa é aplicada ou o percentual")
+        return self
+
+
+class PagamentoIn(BaseModel):
+    forma: FormaPagamento
+    valor: Decimal
 
 
 class CupomItemOut(BaseModel):
