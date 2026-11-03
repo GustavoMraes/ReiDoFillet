@@ -18,6 +18,7 @@ from app.schemas.comanda import (
     PagamentoIn,
     PreContaOut,
     TaxaServicoIn,
+    TransferenciaIn,
 )
 from app.services.auditoria import AuditoriaService
 from app.services.comanda import ComandaService
@@ -149,6 +150,18 @@ async def remover_pagamento(
 ) -> ComandaOut:
     """Remove um pagamento registrado por engano, antes do fechamento (fica na auditoria)."""
     comanda = await service.remover_pagamento(comanda_id, pagamento_id, usuario)
+    return await service.detalhar(comanda)
+
+
+@router.post("/comandas/{comanda_id}/transferir", response_model=ComandaOut, responses=ERROS)
+async def transferir_comanda(
+    comanda_id: int,
+    dados: TransferenciaIn,
+    usuario: Funcionario = Depends(atendente),
+    service: ComandaService = Depends(get_comanda_service),
+) -> ComandaOut:
+    """Leva a comanda inteira (aberta ou em pré-conta) para uma mesa livre; a mesa de origem fica livre."""
+    comanda = await service.transferir(comanda_id, dados.mesa_id, usuario)
     return await service.detalhar(comanda)
 
 

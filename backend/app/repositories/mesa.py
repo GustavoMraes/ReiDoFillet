@@ -37,8 +37,13 @@ class MesaRepository:
         return await self.session.get(Mesa, mesa_id)
 
     async def obter_para_atualizar(self, mesa_id: int) -> Mesa | None:
-        """Bloqueia a linha da mesa até o fim da transação: serializa reservas da mesma mesa."""
-        resultado = await self.session.execute(select(Mesa).where(Mesa.id == mesa_id).with_for_update())
+        """Bloqueia a linha da mesa até o fim da transação: serializa reservas, check-ins e transferências da mesa.
+
+        FOR NO KEY UPDATE não conflita com o FOR KEY SHARE que o PostgreSQL usa ao conferir a chave estrangeira
+        de uma comanda inserida na mesa; com FOR UPDATE, transferência e abertura simultâneas entravam em deadlock.
+        """
+        consulta = select(Mesa).where(Mesa.id == mesa_id).with_for_update(key_share=True)
+        resultado = await self.session.execute(consulta)
         return resultado.scalar_one_or_none()
 
     async def comandas_ativas(self, mesa_id: int | None = None) -> list[ComandaAtiva]:

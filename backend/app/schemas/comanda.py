@@ -75,6 +75,10 @@ class TaxaServicoIn(BaseModel):
         return self
 
 
+class TransferenciaIn(BaseModel):
+    mesa_id: int
+
+
 class PagamentoIn(BaseModel):
     forma: FormaPagamento
     valor: Decimal

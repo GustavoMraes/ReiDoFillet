@@ -93,6 +93,10 @@ class MesaService:
         )
         return situacao
 
+    async def bloquear(self, mesa_id: int) -> Mesa | None:
+        """Bloqueia a linha da mesa até o fim da transação do chamador. None se a mesa não existe."""
+        return await self.repositorio.obter_para_atualizar(mesa_id)
+
     async def mapa(self) -> list[MesaNoMapa]:
         agora = self.relogio.agora()
         return calcular_mapa(

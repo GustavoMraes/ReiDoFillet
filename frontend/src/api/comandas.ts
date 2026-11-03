@@ -81,6 +81,11 @@ export function abrirComanda(mesaId: number): Promise<Comanda> {
   return postJson<Comanda>(`/mesas/${mesaId}/comanda`)
 }
 
+/** Leva a comanda inteira para uma mesa livre (a mesa de origem fica livre). */
+export function transferirComanda(comandaId: number, mesaId: number): Promise<Comanda> {
+  return postJson<Comanda>(`/comandas/${comandaId}/transferir`, { mesa_id: mesaId })
+}
+
 export function obterComanda(comandaId: number): Promise<Comanda> {
   return getJson<Comanda>(`/comandas/${comandaId}`)
 }

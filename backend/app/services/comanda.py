@@ -325,6 +325,36 @@ class ComandaService:
             self._auditar(usuario, Acao.CANCELAR, "Comanda", comanda.id, antes, ComandaSnapshot.model_validate(comanda))
         return comanda
 
+    async def transferir(self, comanda_id: int, mesa_destino_id: int, usuario: Funcionario) -> Comanda:
+        """Leva a comanda inteira para uma mesa livre: só a mesa muda (itens, pré-conta e pagamentos ficam)."""
+        destino_ocupado = "A mesa de destino já está em atendimento"
+        try:
+            async with transacao(self.session):
+                comanda = await self._comanda_ativa_bloqueada(
+                    comanda_id, "Somente comandas em atendimento podem ser transferidas"
+                )
+                if comanda.mesa_id == mesa_destino_id:
+                    raise Conflito("A comanda já está nesta mesa")
+                # O bloqueio da mesa de destino serializa transferências e reservas para ela.
+                if await self.mesas.bloquear(mesa_destino_id) is None:
+                    raise RecursoNaoEncontrado("Mesa não encontrada")
+                situacao = await self.mesas.situacao(mesa_destino_id)
+                if situacao.status == StatusMesa.MANUTENCAO:
+                    raise Conflito("Mesa em manutenção")
+                if situacao.status in (StatusMesa.OCUPADA, StatusMesa.AGUARDANDO_PAGAMENTO):
+                    raise Conflito(destino_ocupado)
+                if situacao.status == StatusMesa.RESERVADA:
+                    raise Conflito("A mesa de destino está reservada")
+
+                antes = ComandaSnapshot.model_validate(comanda)
+                comanda.mesa_id = mesa_destino_id
+                await self.session.flush()
+                self._auditar(usuario, Acao.TRANSFERIR, "Comanda", comanda.id, antes, ComandaSnapshot.model_validate(comanda))
+        except IntegrityError:
+            # Uma abertura comum de comanda no destino venceu a corrida pelo índice único: nada foi gravado.
+            raise Conflito(destino_ocupado) from None
+        return comanda
+
     # --- Taxa de serviço e pagamentos ---
 
     async def alterar_taxa_servico(

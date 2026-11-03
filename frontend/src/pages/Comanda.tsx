@@ -18,6 +18,7 @@ import {
 import CupomEnvio from '../components/CupomEnvio'
 import PreContaImpressao from '../components/PreContaImpressao'
 import { useMensagens } from '../components/Mensagens'
+import TrocarMesa from '../components/TrocarMesa'
 import { usePolling } from '../hooks/usePolling'
 
 const INTERVALO_ATUALIZACAO_MS = 5000
@@ -141,6 +142,7 @@ export default function ComandaPage({ comandaId, onVoltar, onStatus, onIrParaPag
   const [cupom, setCupom] = useState<Cupom | null>(null)
   const [enviando, setEnviando] = useState(false)
   const [preConta, setPreConta] = useState(false)
+  const [trocandoMesa, setTrocandoMesa] = useState(false)
 
   const status = comanda?.status
   useEffect(() => {
@@ -227,9 +229,14 @@ export default function ComandaPage({ comandaId, onVoltar, onStatus, onIrParaPag
           <h1>Comanda — Mesa {comanda.mesa.numero}</h1>
           <p className="subtitulo">Selecione itens do cardápio para adicionar à comanda.</p>
         </div>
-        <button className="secundario" onClick={onVoltar}>
-          ← Mapa de mesas
-        </button>
+        <div className="acoes-cabecalho">
+          <button className="secundario" onClick={() => setTrocandoMesa(true)}>
+            Trocar de mesa
+          </button>
+          <button className="secundario" onClick={onVoltar}>
+            ← Mapa de mesas
+          </button>
+        </div>
       </div>
 
       {desatualizado && (
@@ -323,6 +330,18 @@ export default function ComandaPage({ comandaId, onVoltar, onStatus, onIrParaPag
 
       {cupom && <CupomEnvio cupom={cupom} onFechar={() => setCupom(null)} />}
       {preConta && emPreConta && <PreContaImpressao comanda={comanda} onFechar={() => setPreConta(false)} />}
+      {trocandoMesa && (
+        <TrocarMesa
+          comanda={comanda}
+          onTransferida={(transferida, origem) => {
+            definir(transferida)
+            setTrocandoMesa(false)
+            mostrar(`Comanda transferida da mesa ${origem} para a mesa ${transferida.mesa.numero}`)
+          }}
+          onErro={(mensagem) => mostrar(mensagem, 'erro')}
+          onFechar={() => setTrocandoMesa(false)}
+        />
+      )}
     </section>
   )
 }
