@@ -45,7 +45,7 @@ def get_reserva_service(
 
 @router.get("", response_model=list[ReservaOut], dependencies=[Depends(atendente)])
 async def listar_reservas(data: date | None = None, service: ReservaService = Depends(get_reserva_service)) -> list[ReservaOut]:
-    """Reservas que começam na data informada (padrão: hoje, no fuso de São Paulo), em ordem de horário."""
+    """Reservas que começam na data informada ou, sem data, de hoje em diante (fuso de São Paulo), em ordem de horário."""
     return await service.listar(data)
 
 

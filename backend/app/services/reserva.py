@@ -97,9 +97,13 @@ class ReservaService:
         return reserva, aviso
 
     async def listar(self, dia: date | None) -> list[ReservaOut]:
+        """Reservas de um dia; sem dia, todas a partir do início de hoje (no fuso local)."""
         agora = self.relogio.agora()
-        dia = dia or para_exibicao(agora).date()
-        return [self._saida(reserva, numero, agora) for reserva, numero in await self.reservas.do_periodo(*intervalo_do_dia(dia))]
+        if dia is not None:
+            periodo = intervalo_do_dia(dia)
+        else:
+            periodo = (intervalo_do_dia(para_exibicao(agora).date())[0], None)
+        return [self._saida(reserva, numero, agora) for reserva, numero in await self.reservas.do_periodo(*periodo)]
 
     async def cancelar(self, reserva_id: int, usuario: Funcionario) -> Reserva:
         async with transacao(self.session):

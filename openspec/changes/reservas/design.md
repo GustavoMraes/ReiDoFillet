@@ -23,7 +23,7 @@ Motivação em `proposal.md`. Estado atual relevante:
 
 ### D1. Horários e fuso
 
-`inicio` chega como data e hora ISO 8601; sem fuso, é interpretado como America/Sao_Paulo (a interface envia a hora local da tela). `fim = inicio + 2h` é calculado no servidor. A consulta por data usa o dia em São Paulo: `inicio` em `[data 00:00, data+1 00:00)` no fuso local, convertido para UTC.
+`inicio` chega como data e hora ISO 8601; sem fuso, é interpretado como America/Sao_Paulo (a interface envia a hora local da tela). `fim = inicio + 2h` é calculado no servidor. Sem data, a consulta lista as reservas com `inicio` a partir de 00h00 de hoje (São Paulo). A consulta por data usa o dia em São Paulo: `inicio` em `[data 00:00, data+1 00:00)` no fuso local, convertido para UTC.
 
 ### D2. Conflito de horário com bloqueio da mesa
 
@@ -53,7 +53,7 @@ A janela de reserva não é verificada: o check-in é justamente o que libera a 
 
 | Rota | Resposta |
 |---|---|
-| `GET /reservas?data=AAAA-MM-DD` (padrão: hoje) | lista `{id, mesa: {id, numero}, nome_cliente, telefone, qtd_pessoas, inicio, fim, status, situacao}` |
+| `GET /reservas?data=AAAA-MM-DD` (sem data: de hoje em diante) | lista `{id, mesa: {id, numero}, nome_cliente, telefone, qtd_pessoas, inicio, fim, status, situacao}` |
 | `POST /reservas` `{mesa_id, nome_cliente, telefone, qtd_pessoas, inicio}` | 201 `{reserva, aviso}` (`aviso` sobre capacidade) |
 | `POST /reservas/{id}/cancelar` | reserva |
 | `POST /reservas/{id}/check-in` | `{reserva, comanda}` |
@@ -66,7 +66,7 @@ A janela de reserva não é verificada: o check-in é justamente o que libera a 
 
 ### D8. Interface
 
-- Nova aba **Reservas**, sempre disponível para Funcionário e Administrador: seletor de data (hoje por padrão), lista em ordem de horário com selo de situação, "Check-in" e "Cancelar" nas confirmadas, e formulário "Nova reserva" (mesa por número e capacidade, cliente, telefone, pessoas, data e hora).
+- Nova aba **Reservas**, sempre disponível para Funcionário e Administrador: lista de hoje em diante agrupada por dia, filtro opcional por data, em ordem de horário com selo de situação, "Check-in" e "Cancelar" nas confirmadas, e formulário "Nova reserva" (mesa por número e capacidade, cliente, telefone, pessoas, data e hora).
 - **Mapa:** mesa Reservada abre um diálogo com cliente, pessoas e horário (a partir de `GET /reservas` do dia) e o botão de check-in; mesa Livre com `proxima_reserva_inicio` mostra "Reserva às HHhMM" no cartão e pede confirmação antes de abrir a comanda.
 - Check-in, pelo mapa ou pela lista, leva à tela da comanda aberta.
 

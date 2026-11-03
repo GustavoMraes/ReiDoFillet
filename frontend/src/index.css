@@ -1001,6 +1001,10 @@ h1 {
   font-weight: 600;
 }
 
+.grupo-dia + .grupo-dia {
+  margin-top: 24px;
+}
+
 .titulo-dia::first-letter {
   text-transform: uppercase;
 }

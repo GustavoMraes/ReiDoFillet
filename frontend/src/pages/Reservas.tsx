@@ -145,10 +145,21 @@ function NovaReservaForm({
   )
 }
 
+/** Agrupa as reservas (já em ordem de horário) pelo dia local de início ("2026-11-10"). */
+function porDia(reservas: Reserva[]): [string, Reserva[]][] {
+  const grupos = new Map<string, Reserva[]>()
+  for (const reserva of reservas) {
+    const dia = reserva.inicio.slice(0, 10)
+    grupos.set(dia, [...(grupos.get(dia) ?? []), reserva])
+  }
+  return [...grupos]
+}
+
 export default function Reservas({ onAbrirComanda }: { onAbrirComanda: (comandaId: number) => void }) {
   const mostrar = useMensagens()
-  const [data, setData] = useState(hojeLocal)
-  const buscar = useCallback(() => listarReservas(data), [data])
+  // Vazio: todas as reservas de hoje em diante; com data: só as daquele dia.
+  const [data, setData] = useState('')
+  const buscar = useCallback(() => listarReservas(data || undefined), [data])
   const { dados: reservas, desatualizado, definir } = usePolling(buscar, INTERVALO_ATUALIZACAO_MS)
   const [formAberto, setFormAberto] = useState(false)
   const [aviso, setAviso] = useState<string | null>(null)
@@ -164,8 +175,9 @@ export default function Reservas({ onAbrirComanda }: { onAbrirComanda: (comandaI
   function criada(reserva: Reserva, avisoCapacidade: string | null) {
     mostrar(`Reserva confirmada: mesa ${reserva.mesa.numero} às ${horaCurta(reserva.inicio)}`)
     setAviso(avisoCapacidade)
+    // Filtrando outro dia, passa a mostrar o dia da nova reserva; na visão geral, ela já aparece.
     const dia = reserva.inicio.slice(0, 10)
-    if (dia !== data) setData(dia)
+    if (data && dia !== data) setData(dia)
     else recarregar().catch(() => {})
   }
 
@@ -200,16 +212,16 @@ export default function Reservas({ onAbrirComanda }: { onAbrirComanda: (comandaI
   return (
     <section>
       <h1>Reservas</h1>
-      <p className="subtitulo">Reservas do dia, com check-in e cancelamento.</p>
+      <p className="subtitulo">Reservas de hoje em diante, com check-in e cancelamento.</p>
 
       <div className="barra-reservas">
         <label className="campo campo-data">
-          Data
-          <input type="date" value={data} onChange={(e) => e.target.value && setData(e.target.value)} />
+          Filtrar por dia
+          <input type="date" value={data} onChange={(e) => setData(e.target.value)} />
         </label>
-        {data !== hojeLocal() && (
-          <button className="secundario" onClick={() => setData(hojeLocal())}>
-            Hoje
+        {data && (
+          <button className="secundario" onClick={() => setData('')}>
+            Ver todas a partir de hoje
           </button>
         )}
         {!formAberto && (
@@ -227,49 +239,55 @@ export default function Reservas({ onAbrirComanda }: { onAbrirComanda: (comandaI
 
       <div className={formAberto ? 'colunas-reservas' : undefined}>
         <div>
-          <h2 className="titulo-dia">{dataPorExtenso(data)}</h2>
+          {data && <h2 className="titulo-dia">{dataPorExtenso(data)}</h2>}
           {desatualizado && (
             <p className="aviso" role="alert">
               Não foi possível atualizar as reservas; tentando novamente…
             </p>
           )}
           {!reservas && !desatualizado && <p className="vazio">Carregando reservas…</p>}
-          {reservas && reservas.length === 0 && <p className="vazio">Nenhuma reserva para este dia.</p>}
-          {reservas && reservas.length > 0 && (
-            <ul className="lista-reservas">
-              {reservas.map((reserva) => (
-                <li key={reserva.id} className={`reserva situacao-${reserva.situacao.toLowerCase()}`}>
-                  <div className="reserva-horario">
-                    <strong>{horaCurta(reserva.inicio)}</strong>
-                    <small>até {horaCurta(reserva.fim)}</small>
-                  </div>
-                  <div className="reserva-info">
-                    <strong>
-                      Mesa {reserva.mesa.numero} · {reserva.nome_cliente}
-                    </strong>
-                    <small>
-                      {reserva.qtd_pessoas} {reserva.qtd_pessoas === 1 ? 'pessoa' : 'pessoas'} · {reserva.telefone}
-                    </small>
-                  </div>
-                  <span className="selo">{ROTULOS_SITUACAO[reserva.situacao]}</span>
-                  {reserva.status === 'CONFIRMADA' && (
-                    <div className="reserva-acoes">
-                      <button className="secundario" disabled={ocupado} onClick={() => setCancelando(reserva)}>
-                        Cancelar
-                      </button>
-                      <button className="primario" disabled={ocupado} onClick={() => checkIn(reserva)}>
-                        Check-in
-                      </button>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
+          {reservas && reservas.length === 0 && (
+            <p className="vazio">{data ? 'Nenhuma reserva para este dia.' : 'Nenhuma reserva de hoje em diante.'}</p>
           )}
+          {reservas &&
+            porDia(reservas).map(([dia, doDia]) => (
+              <div key={dia} className="grupo-dia">
+                {!data && <h2 className="titulo-dia">{dataPorExtenso(dia)}</h2>}
+                <ul className="lista-reservas">
+                  {doDia.map((reserva) => (
+                    <li key={reserva.id} className={`reserva situacao-${reserva.situacao.toLowerCase()}`}>
+                      <div className="reserva-horario">
+                        <strong>{horaCurta(reserva.inicio)}</strong>
+                        <small>até {horaCurta(reserva.fim)}</small>
+                      </div>
+                      <div className="reserva-info">
+                        <strong>
+                          Mesa {reserva.mesa.numero} · {reserva.nome_cliente}
+                        </strong>
+                        <small>
+                          {reserva.qtd_pessoas} {reserva.qtd_pessoas === 1 ? 'pessoa' : 'pessoas'} · {reserva.telefone}
+                        </small>
+                      </div>
+                      <span className="selo">{ROTULOS_SITUACAO[reserva.situacao]}</span>
+                      {reserva.status === 'CONFIRMADA' && (
+                        <div className="reserva-acoes">
+                          <button className="secundario" disabled={ocupado} onClick={() => setCancelando(reserva)}>
+                            Cancelar
+                          </button>
+                          <button className="primario" disabled={ocupado} onClick={() => checkIn(reserva)}>
+                            Check-in
+                          </button>
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
         </div>
         {formAberto && (
           <NovaReservaForm
-            dataInicial={data}
+            dataInicial={data || hojeLocal()}
             onCriada={criada}
             onFechar={() => {
               setFormAberto(false)

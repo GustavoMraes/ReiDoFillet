@@ -242,20 +242,48 @@ async def test_acima_da_capacidade(session: AsyncSession):
 # --- Consulta das reservas do dia ---
 
 
-async def test_reservas_de_hoje(session: AsyncSession):
-    amb = await preparar(session)
-
+async def _reservas_de_varios_dias(session: AsyncSession, amb: Ambiente) -> None:
+    async with cliente_api(session, _relogio(9)) as cliente:
+        await reservar(cliente, amb.gabriela, amb.mesas[2], f"{DIA}T10:00:00", nome="Manhã")
     async with cliente_api(session, HOJE_15H) as cliente:
         await reservar(cliente, amb.gabriela, amb.mesas[4], f"{DIA}T20:30:00", nome="Segunda")
         await reservar(cliente, amb.gabriela, amb.mesas[5], f"{DIA}T19:00:00", nome="Primeira")
         await reservar(cliente, amb.gabriela, amb.mesas[3], f"{DIA}T23:59:00", nome="Fim do dia")
         await reservar(cliente, amb.gabriela, amb.mesas[4], "2026-11-11T19:00:00", nome="Amanhã")
-        hoje = await cliente.get("/reservas", headers=cabecalho_de(amb.gabriela))
+        await reservar(cliente, amb.gabriela, amb.mesas[1], "2026-12-01T12:00:00", nome="Mês que vem")
+    session.add(
+        Reserva(
+            mesa_id=amb.mesas[1], nome_cliente="Ontem", telefone="11999990000", qtd_pessoas=2,
+            inicio=datetime(2026, 11, 9, 20, 0, tzinfo=SP), fim=datetime(2026, 11, 9, 22, 0, tzinfo=SP),
+        )
+    )
+    await session.commit()
+
+
+async def test_reservas_de_um_dia(session: AsyncSession):
+    amb = await preparar(session)
+    await _reservas_de_varios_dias(session, amb)
+
+    async with cliente_api(session, HOJE_15H) as cliente:
+        hoje = await cliente.get("/reservas", params={"data": DIA}, headers=cabecalho_de(amb.gabriela))
         amanha = await cliente.get("/reservas", params={"data": "2026-11-11"}, headers=cabecalho_de(amb.gabriela))
 
     assert hoje.status_code == 200
-    assert [r["nome_cliente"] for r in hoje.json()] == ["Primeira", "Segunda", "Fim do dia"]
+    assert [r["nome_cliente"] for r in hoje.json()] == ["Manhã", "Primeira", "Segunda", "Fim do dia"]
     assert [r["nome_cliente"] for r in amanha.json()] == ["Amanhã"]
+
+
+async def test_sem_data_lista_de_hoje_em_diante(session: AsyncSession):
+    amb = await preparar(session)
+    await _reservas_de_varios_dias(session, amb)
+
+    async with cliente_api(session, HOJE_15H) as cliente:
+        resposta = await cliente.get("/reservas", headers=cabecalho_de(amb.gabriela))
+
+    assert resposta.status_code == 200
+    assert [r["nome_cliente"] for r in resposta.json()] == [
+        "Manhã", "Primeira", "Segunda", "Fim do dia", "Amanhã", "Mês que vem"
+    ]
 
 
 async def test_situacao_nao_compareceu_na_listagem(session: AsyncSession):

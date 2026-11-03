@@ -62,12 +62,16 @@ Cada reserva MUST ser apresentada com uma situação: Confirmada, Concluída, Ca
 - **WHEN** uma reserva confirmada para as 20h30 é consultada às 21h00
 - **THEN** a situação apresentada é Confirmada
 
-### Requirement: Consulta das reservas do dia
-O sistema SHALL listar as reservas que começam em uma data (no fuso de São Paulo; padrão: hoje), em ordem de horário, com número da mesa, cliente, telefone, quantidade de pessoas, início, fim e situação.
+### Requirement: Consulta das reservas
+O sistema SHALL listar, em ordem de horário, as reservas que começam de hoje em diante (a partir de 00h00 de hoje, no fuso de São Paulo) ou, quando uma data for informada, apenas as que começam naquela data. Cada reserva MUST vir com número da mesa, cliente, telefone, quantidade de pessoas, início, fim e situação.
 
-#### Scenario: Reservas de hoje
-- **WHEN** existem reservas hoje às 19h00 e às 20h30 e uma amanhã
-- **THEN** a consulta de hoje retorna as duas reservas de hoje, na ordem 19h00 e 20h30
+#### Scenario: Reservas de hoje em diante
+- **WHEN** existem reservas ontem, hoje às 19h00 e às 20h30 e amanhã às 19h00, e a consulta é feita sem data
+- **THEN** são retornadas as reservas de hoje e de amanhã, na ordem 19h00, 20h30 e amanhã 19h00, sem a de ontem
+
+#### Scenario: Reservas de um dia específico
+- **WHEN** existem reservas hoje às 19h00 e às 20h30 e uma amanhã, e a consulta é feita com a data de hoje
+- **THEN** são retornadas apenas as duas reservas de hoje, na ordem 19h00 e 20h30
 
 ### Requirement: Cancelamento de reserva
 O sistema SHALL cancelar uma reserva CONFIRMADA, registrando quem cancelou; a mesa deixa de ser bloqueada por ela. Reservas concluídas ou já canceladas MUST NOT ser canceladas.
@@ -110,11 +114,15 @@ Todas as operações de reserva MUST exigir sessão válida e MUST ser liberadas
 - **THEN** a requisição é recusada como sem permissão
 
 ### Requirement: Tela de reservas
-A interface SHALL oferecer a aba Reservas com a lista de um dia escolhido (inicialmente hoje), a situação de cada reserva, um formulário de nova reserva e as ações de cancelar e fazer check-in nas reservas confirmadas. O check-in MUST levar à tela da comanda aberta.
+A interface SHALL oferecer a aba Reservas com a lista das reservas de hoje em diante, agrupadas por dia, e um filtro opcional para ver um dia específico, a situação de cada reserva, um formulário de nova reserva e as ações de cancelar e fazer check-in nas reservas confirmadas. O check-in MUST levar à tela da comanda aberta.
 
 #### Scenario: Nova reserva pela tela
 - **WHEN** o funcionário preenche o formulário com mesa, cliente, telefone, pessoas, data e hora e confirma
-- **THEN** a reserva aparece na lista do dia e é exibida uma mensagem de confirmação
+- **THEN** a reserva aparece na lista, sob o dia dela, e é exibida uma mensagem de confirmação
+
+#### Scenario: Filtro por dia
+- **WHEN** o funcionário escolhe uma data no filtro
+- **THEN** a lista mostra apenas as reservas daquele dia, com a opção de voltar a ver todas de hoje em diante
 
 #### Scenario: Check-in pela tela
 - **WHEN** o funcionário clica em "Check-in" em uma reserva confirmada

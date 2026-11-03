@@ -32,15 +32,17 @@ class ReservaRepository:
         )
         return resultado.scalar_one_or_none()
 
-    async def do_periodo(self, inicio: datetime, fim: datetime) -> list[tuple[Reserva, int]]:
-        """Reservas que começam no período, com o número da mesa, em ordem de horário."""
-        resultado = await self.session.execute(
+    async def do_periodo(self, inicio: datetime, fim: datetime | None = None) -> list[tuple[Reserva, int]]:
+        """Reservas que começam no período (sem `fim`: dali em diante), com o número da mesa, em ordem de horário."""
+        consulta = (
             select(Reserva, Mesa.numero)
             .join(Mesa, Mesa.id == Reserva.mesa_id)
-            .where(Reserva.inicio >= inicio, Reserva.inicio < fim)
+            .where(Reserva.inicio >= inicio)
             .order_by(Reserva.inicio, Mesa.numero)
         )
-        return [(reserva, numero) for reserva, numero in resultado]
+        if fim is not None:
+            consulta = consulta.where(Reserva.inicio < fim)
+        return [(reserva, numero) for reserva, numero in await self.session.execute(consulta)]
 
     async def numero_da_mesa(self, mesa_id: int) -> int:
         return (await self.session.execute(select(Mesa.numero).where(Mesa.id == mesa_id))).scalar_one()
