@@ -28,7 +28,7 @@
 ## 5. Implantação e verificação
 
 - [x] 5.1 Rodar `pytest` completo e `npm run build` e verificar que tudo passa
-- [ ] 5.2 Publicar (push na `main`) e verificar na URL pública: abrir a comanda de uma mesa, registrar itens, somar idêntico, cancelar um item, conferir o total e a mesa como Ocupada no mapa; ao final, cancelar os itens e encerrar a comanda de teste diretamente no banco, deixando a mesa livre
+- [x] 5.2 Publicar (push na `main`) e verificar na URL pública: abrir a comanda de uma mesa, registrar itens, somar idêntico, cancelar um item, conferir o total e a mesa como Ocupada no mapa; ao final, cancelar os itens e encerrar a comanda de teste diretamente no banco, deixando a mesa livre
 
 ## Workflow follow-up
 
