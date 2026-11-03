@@ -10,7 +10,7 @@ from app.models import Comanda, Funcionario, ItemComanda
 from app.models.enums import Perfil, StatusComanda, StatusItem, StatusMesa
 from app.repositories.cardapio import CardapioRepository
 from app.repositories.comanda import ComandaRepository
-from app.schemas.comanda import ComandaOut, ItemComandaOut, MesaResumoOut, ResponsavelOut
+from app.schemas.comanda import ComandaOut, CupomItemOut, CupomOut, ItemComandaOut, MesaResumoOut, ResponsavelOut
 from app.schemas.snapshots import ComandaSnapshot, ItemComandaSnapshot
 from app.services.auditoria import Acao, AuditoriaService
 from app.services.mesa import MesaService
@@ -208,6 +208,36 @@ class ComandaService:
             item.cancelado_por_id = usuario.id
             self._auditar(usuario, Acao.CANCELAR, "ItemComanda", item.id, antes, ItemComandaSnapshot.model_validate(item))
         return comanda
+
+    # --- Envio à cozinha ---
+
+    async def enviar(self, comanda_id: int, usuario: Funcionario) -> tuple[Comanda, CupomOut]:
+        """Envia todos os itens pendentes de uma vez, com um único horário de envio (o lote do cupom)."""
+        async with transacao(self.session):
+            comanda = await self._comanda_aberta_bloqueada(comanda_id, "A comanda não está aberta para envio")
+            pendentes = [i for i in await self.comandas.itens(comanda_id) if i.status == StatusItem.PENDENTE]
+            if not pendentes:
+                raise Conflito("Não há itens pendentes para enviar")
+
+            enviado_em = self.relogio.agora()
+            for item in pendentes:
+                antes = ItemComandaSnapshot.model_validate(item)
+                item.status = StatusItem.EM_PREPARO
+                item.enviado_em = enviado_em
+                self._auditar(usuario, Acao.ENVIAR, "ItemComanda", item.id, antes, ItemComandaSnapshot.model_validate(item))
+
+            numero_mesa, _ = await self.comandas.cabecalho(comanda)
+            nomes = await self.cardapio.nomes_produtos({item.produto_id for item in pendentes})
+            cupom = CupomOut(
+                mesa_numero=numero_mesa,
+                garcom=usuario.nome,
+                enviado_em=para_exibicao(enviado_em),
+                itens=[
+                    CupomItemOut(quantidade=i.quantidade, produto_nome=nomes[i.produto_id], observacao=i.observacao)
+                    for i in pendentes
+                ],
+            )
+        return comanda, cupom
 
     # --- Auxiliares ---
 

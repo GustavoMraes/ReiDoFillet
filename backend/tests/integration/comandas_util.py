@@ -54,6 +54,10 @@ async def abrir(cliente: AsyncClient, usuario: UsuarioRef, mesa_id: int) -> Resp
     return await cliente.post(f"/mesas/{mesa_id}/comanda", headers=cabecalho_de(usuario))
 
 
+async def enviar(cliente: AsyncClient, usuario: UsuarioRef, comanda_id: int) -> Response:
+    return await cliente.post(f"/comandas/{comanda_id}/enviar", headers=cabecalho_de(usuario))
+
+
 async def adicionar(
     cliente: AsyncClient, usuario: UsuarioRef, comanda_id: int, produto: ProdutoRef, quantidade: int = 1, observacao: str = ""
 ) -> Response:

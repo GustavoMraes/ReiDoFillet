@@ -23,6 +23,17 @@ export interface Comanda {
   total: string
 }
 
+export interface Cupom {
+  mesa_numero: number
+  garcom: string
+  enviado_em: string
+  itens: { quantidade: number; produto_nome: string; observacao: string }[]
+}
+
+export function enviarComanda(comandaId: number): Promise<{ comanda: Comanda; cupom: Cupom }> {
+  return postJson<{ comanda: Comanda; cupom: Cupom }>(`/comandas/${comandaId}/enviar`)
+}
+
 export function abrirComanda(mesaId: number): Promise<Comanda> {
   return postJson<Comanda>(`/mesas/${mesaId}/comanda`)
 }

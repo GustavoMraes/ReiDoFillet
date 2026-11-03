@@ -35,6 +35,26 @@ class ComandaOut(BaseModel):
     total: Decimal
 
 
+class CupomItemOut(BaseModel):
+    quantidade: int
+    produto_nome: str
+    observacao: str
+
+
+class CupomOut(BaseModel):
+    """Cupom de um envio à cozinha: só os itens enviados nesse envio."""
+
+    mesa_numero: int
+    garcom: str
+    enviado_em: datetime
+    itens: list[CupomItemOut]
+
+
+class EnvioOut(BaseModel):
+    comanda: ComandaOut
+    cupom: CupomOut
+
+
 class ItemIn(BaseModel):
     """Faixas de quantidade e tamanho da observação são validados no serviço, com mensagens em português."""
 

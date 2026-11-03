@@ -20,3 +20,7 @@ class CardapioRepository:
 
     async def obter_produto(self, produto_id: int) -> Produto | None:
         return await self.session.get(Produto, produto_id)
+
+    async def nomes_produtos(self, produto_ids: set[int]) -> dict[int, str]:
+        resultado = await self.session.execute(select(Produto.id, Produto.nome).where(Produto.id.in_(produto_ids)))
+        return dict(resultado.all())

@@ -6,11 +6,14 @@ import {
   adicionarItem,
   alterarItem,
   cancelarItem,
+  enviarComanda,
   obterComanda,
   type Comanda,
+  type Cupom,
   type ItemComanda,
   type StatusItem,
 } from '../api/comandas'
+import CupomEnvio from '../components/CupomEnvio'
 import { useMensagens } from '../components/Mensagens'
 import { usePolling } from '../hooks/usePolling'
 
@@ -124,6 +127,8 @@ export default function ComandaPage({ comandaId, onVoltar }: { comandaId: number
   const buscarComanda = useCallback(() => obterComanda(comandaId), [comandaId])
   const { dados: comanda, desatualizado, definir } = usePolling<Comanda>(buscarComanda, INTERVALO_ATUALIZACAO_MS)
   const [cardapio, setCardapio] = useState<CategoriaCardapio[] | null>(null)
+  const [cupom, setCupom] = useState<Cupom | null>(null)
+  const [enviando, setEnviando] = useState(false)
 
   const carregarCardapio = useCallback(() => {
     obterCardapio()
@@ -150,6 +155,22 @@ export default function ComandaPage({ comandaId, onVoltar }: { comandaId: number
   }
 
   const ativos = comanda.itens.filter((item) => item.status !== 'CANCELADO')
+  const temPendentes = comanda.itens.some((item) => item.status === 'PENDENTE')
+
+  async function enviar() {
+    if (!comanda) return
+    setEnviando(true)
+    try {
+      const resposta = await enviarComanda(comanda.id)
+      definir(resposta.comanda)
+      setCupom(resposta.cupom)
+      mostrar('Itens enviados para a cozinha')
+    } catch (erro) {
+      mostrar(mensagemDeErro(erro), 'erro')
+    } finally {
+      setEnviando(false)
+    }
+  }
 
   return (
     <section className="tela-comanda">
@@ -216,14 +237,16 @@ export default function ComandaPage({ comandaId, onVoltar }: { comandaId: number
             <span>Total{ativos.length > 0 && ` (${ativos.reduce((soma, item) => soma + item.quantidade, 0)} itens)`}</span>
             <strong>{emReais(comanda.total)}</strong>
           </div>
-          <button className="primario" disabled title="Disponível no próximo incremento">
-            Enviar itens para a cozinha
+          <button className="primario" onClick={enviar} disabled={!temPendentes || enviando}>
+            {enviando ? 'Enviando…' : 'Enviar itens para a cozinha'}
           </button>
           <button className="secundario" disabled title="Disponível em um próximo incremento">
             Gerar pré-conta
           </button>
         </aside>
       </div>
+
+      {cupom && <CupomEnvio cupom={cupom} onFechar={() => setCupom(null)} />}
     </section>
   )
 }

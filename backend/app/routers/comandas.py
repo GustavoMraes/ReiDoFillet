@@ -10,7 +10,7 @@ from app.repositories.cardapio import CardapioRepository
 from app.repositories.comanda import ComandaRepository
 from app.repositories.mesa import MesaRepository
 from app.routers.dependencias import exigir_perfis
-from app.schemas.comanda import ComandaOut, ItemAlteracaoIn, ItemIn
+from app.schemas.comanda import ComandaOut, EnvioOut, ItemAlteracaoIn, ItemIn
 from app.services.auditoria import AuditoriaService
 from app.services.comanda import ComandaService
 from app.services.mesa import MesaService
@@ -80,6 +80,21 @@ async def alterar_item(
 ) -> ComandaOut:
     comanda = await service.alterar_item(comanda_id, item_id, dados.quantidade, dados.observacao, usuario)
     return await service.detalhar(comanda)
+
+
+@router.post(
+    "/comandas/{comanda_id}/enviar",
+    response_model=EnvioOut,
+    responses={404: ERROS[404], 409: {"description": "Comanda não aberta ou sem itens pendentes"}},
+)
+async def enviar_para_cozinha(
+    comanda_id: int,
+    usuario: Funcionario = Depends(atendente),
+    service: ComandaService = Depends(get_comanda_service),
+) -> EnvioOut:
+    """Envia todos os itens pendentes à cozinha (passam a EM_PREPARO) e devolve o cupom do envio."""
+    comanda, cupom = await service.enviar(comanda_id, usuario)
+    return EnvioOut(comanda=await service.detalhar(comanda), cupom=cupom)
 
 
 @router.post(
