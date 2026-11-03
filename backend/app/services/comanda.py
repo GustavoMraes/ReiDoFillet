@@ -377,7 +377,7 @@ class ComandaService:
             comanda.taxa_servico_aplicada = nova_aplicada
             self._auditar(usuario, Acao.ALTERAR, "Comanda", comanda.id, antes, ComandaSnapshot.model_validate(comanda))
             if resumo.pago > 0 and resumo.restante == 0:
-                self._fechar(comanda, usuario)
+                await self._fechar(comanda, usuario)
         return comanda
 
     async def registrar_pagamento(
@@ -407,7 +407,7 @@ class ComandaService:
             await self.session.flush()
             self._auditar(usuario, Acao.PAGAR, "Pagamento", pagamento.id, None, PagamentoSnapshot.model_validate(pagamento))
             if valor == resumo.restante:
-                self._fechar(comanda, usuario)
+                await self._fechar(comanda, usuario)
         return comanda
 
     async def remover_pagamento(self, comanda_id: int, pagamento_id: int, usuario: Funcionario) -> Comanda:
@@ -450,10 +450,18 @@ class ComandaService:
         comanda.pre_conta_em = None
         self._auditar(usuario, Acao.ALTERAR, "Comanda", comanda.id, antes, ComandaSnapshot.model_validate(comanda))
 
-    def _fechar(self, comanda: Comanda, usuario: Funcionario) -> None:
+    async def _fechar(self, comanda: Comanda, usuario: Funcionario) -> None:
+        """Fecha a comanda e conclui a entrega do que ainda estava na cozinha: nada fica preso no painel."""
+        fechada_em = self.relogio.agora()
+        for item in await self.comandas.itens(comanda.id):
+            if item.status in STATUS_ITEM_NAO_ENTREGUE:
+                antes = ItemComandaSnapshot.model_validate(item)
+                item.status = StatusItem.ENTREGUE
+                item.entregue_em = fechada_em
+                self._auditar(usuario, Acao.ENTREGAR, "ItemComanda", item.id, antes, ItemComandaSnapshot.model_validate(item))
         antes = ComandaSnapshot.model_validate(comanda)
         comanda.status = StatusComanda.FECHADA
-        comanda.fechada_em = self.relogio.agora()
+        comanda.fechada_em = fechada_em
         self._auditar(usuario, Acao.ALTERAR, "Comanda", comanda.id, antes, ComandaSnapshot.model_validate(comanda))
 
     async def _resumo(
