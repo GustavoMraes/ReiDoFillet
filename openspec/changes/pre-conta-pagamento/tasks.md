@@ -25,7 +25,7 @@
 ## 5. Implantação e verificação
 
 - [x] 5.1 Rodar `pytest` completo e `npm run build` e verificar que tudo passa
-- [ ] 5.2 Publicar (push na `main`) e verificar na URL pública o ciclo completo: abrir comanda, lançar e enviar itens, marcar entregues, gerar e imprimir a pré-conta, desligar e religar a taxa, pagar em duas formas e confirmar a mesa Livre; verificar também o cancelamento de uma comanda vazia
+- [x] 5.2 Publicar (push na `main`) e verificar na URL pública o ciclo completo: abrir comanda, lançar e enviar itens, marcar entregues, gerar e imprimir a pré-conta, desligar e religar a taxa, pagar em duas formas e confirmar a mesa Livre; verificar também o cancelamento de uma comanda vazia
 
 ## Workflow follow-up
 
