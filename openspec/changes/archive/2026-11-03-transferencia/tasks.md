@@ -14,7 +14,7 @@
 ## 3. Implantação e verificação
 
 - [x] 3.1 Rodar `pytest` completo e `npm run build` e verificar que tudo passa
-- [ ] 3.2 Publicar (push na `main`) e verificar na URL pública: abrir uma comanda, lançar e enviar um item, trocar de mesa, conferir mapa e cozinha e, ao final, encerrar pelo próprio sistema a comanda de teste
+- [x] 3.2 Publicar (push na `main`) e verificar na URL pública: abrir uma comanda, lançar e enviar um item, trocar de mesa, conferir mapa e cozinha e, ao final, encerrar pelo próprio sistema a comanda de teste
 
 ## Workflow follow-up
 
