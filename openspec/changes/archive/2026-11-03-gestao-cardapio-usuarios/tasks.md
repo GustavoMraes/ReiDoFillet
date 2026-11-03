@@ -21,7 +21,7 @@
 ## 4. Implantação e verificação
 
 - [x] 4.1 Rodar `pytest` completo e `npm run build` e verificar que tudo passa
-- [ ] 4.2 Publicar (push na `main`), confirmar a migração `0003` aplicada e verificar na URL pública: cadastrar um usuário de teste e entrar com ele, trocar a senha dele pelo cabeçalho, bloqueá-lo; criar um produto de teste, mudar o preço, marcar esgotado como funcionário e desativá-lo ao final
+- [x] 4.2 Publicar (push na `main`), confirmar a migração `0003` aplicada e verificar na URL pública: cadastrar um usuário de teste e entrar com ele, trocar a senha dele pelo cabeçalho, bloqueá-lo; criar um produto de teste, mudar o preço, marcar esgotado como funcionário e desativá-lo ao final
 
 ## Workflow follow-up
 

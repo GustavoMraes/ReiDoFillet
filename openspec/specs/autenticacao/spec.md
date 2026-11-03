@@ -99,7 +99,7 @@ Toda tentativa de login MUST gerar um registro de auditoria: com o usuário iden
 - **THEN** é gravado um registro de auditoria de falha de login contendo o login informado e o motivo, sem a senha
 
 ### Requirement: Definição de senha de funcionário
-O sistema SHALL permitir que um responsável técnico defina a senha de um funcionário existente por meio de uma ferramenta administrativa fora da interface web. A senha MUST ter no mínimo 8 caracteres e MUST ser armazenada apenas como hash irreversível.
+O sistema SHALL permitir definir a senha de um funcionário existente pela interface (cadastro e redefinição pelo administrador, ou troca pelo próprio usuário) e, para recuperação de acesso, por uma ferramenta administrativa fora da interface web. Em todos os casos, a senha MUST ter no mínimo 8 caracteres e MUST ser armazenada apenas como hash irreversível.
 
 #### Scenario: Senha válida
 - **WHEN** é definida uma senha com 8 ou mais caracteres para um funcionário existente
