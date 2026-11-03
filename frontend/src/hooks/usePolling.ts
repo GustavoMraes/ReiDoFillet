@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 interface EstadoPolling<T> {
   dados: T | null
@@ -7,8 +7,13 @@ interface EstadoPolling<T> {
   desatualizado: boolean
 }
 
+interface ResultadoPolling<T> extends EstadoPolling<T> {
+  /** Substitui os dados na hora, com a resposta de uma ação (sem esperar o próximo ciclo). */
+  definir: (dados: T) => void
+}
+
 /** Busca os dados ao montar e repete a cada `intervaloMs`, sem sobrepor requisições. */
-export function usePolling<T>(buscar: () => Promise<T>, intervaloMs: number): EstadoPolling<T> {
+export function usePolling<T>(buscar: () => Promise<T>, intervaloMs: number): ResultadoPolling<T> {
   const [estado, setEstado] = useState<EstadoPolling<T>>({ dados: null, carregando: true, desatualizado: false })
   const buscarRef = useRef(buscar)
   buscarRef.current = buscar
@@ -35,5 +40,7 @@ export function usePolling<T>(buscar: () => Promise<T>, intervaloMs: number): Es
     }
   }, [intervaloMs])
 
-  return estado
+  const definir = useCallback((dados: T) => setEstado({ dados, carregando: false, desatualizado: false }), [])
+
+  return { ...estado, definir }
 }

@@ -68,6 +68,20 @@ class MesaService:
         self.repositorio = repositorio
         self.relogio = relogio
 
+    async def situacao(self, mesa_id: int) -> MesaNoMapa | None:
+        """Status de uma única mesa, pela mesma regra do mapa. None se a mesa não existe."""
+        mesa = await self.repositorio.obter(mesa_id)
+        if mesa is None:
+            return None
+        agora = self.relogio.agora()
+        [situacao] = calcular_mapa(
+            [mesa],
+            await self.repositorio.comandas_ativas(mesa_id),
+            await self.repositorio.reservas_na_janela(agora, mesa_id),
+            agora,
+        )
+        return situacao
+
     async def mapa(self) -> list[MesaNoMapa]:
         agora = self.relogio.agora()
         return calcular_mapa(

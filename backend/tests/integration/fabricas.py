@@ -1,10 +1,24 @@
 from datetime import UTC, datetime
 
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import Settings
 from app.core.seguranca import criar_token, gerar_hash
+from app.core.tempo import Relogio, get_relogio
+from app.db.session import get_session
+from app.main import create_app
 from app.models import Funcionario
 from tests.conftest import SEGREDO_TESTE
+
+
+def cliente_api(session: AsyncSession, relogio: Relogio | None = None) -> AsyncClient:
+    """Cliente HTTP da aplicação usando a sessão do teste (e, opcionalmente, um relógio fixo)."""
+    app = create_app(Settings(_env_file=None, jwt_secret=SEGREDO_TESTE))
+    app.dependency_overrides[get_session] = lambda: session
+    if relogio is not None:
+        app.dependency_overrides[get_relogio] = lambda: relogio
+    return AsyncClient(transport=ASGITransport(app=app), base_url="http://test")
 
 SENHA_PADRAO = "senha-de-teste-123"
 

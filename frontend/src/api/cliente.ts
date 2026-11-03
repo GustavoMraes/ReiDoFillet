@@ -12,7 +12,7 @@ export class ErroApi extends Error {
 }
 
 interface Opcoes {
-  metodo?: 'GET' | 'POST'
+  metodo?: 'GET' | 'POST' | 'PATCH'
   corpo?: unknown
   /** Na chamada de login, um 401 é erro de credencial, não sessão expirada. */
   semSessao?: boolean
@@ -48,6 +48,17 @@ export function getJson<T>(caminho: string): Promise<T> {
   return requisitar<T>(caminho)
 }
 
-export function postJson<T>(caminho: string, corpo: unknown, opcoes: Omit<Opcoes, 'metodo' | 'corpo'> = {}): Promise<T> {
+export function postJson<T>(caminho: string, corpo?: unknown, opcoes: Omit<Opcoes, 'metodo' | 'corpo'> = {}): Promise<T> {
   return requisitar<T>(caminho, { ...opcoes, metodo: 'POST', corpo })
+}
+
+export function patchJson<T>(caminho: string, corpo: unknown): Promise<T> {
+  return requisitar<T>(caminho, { metodo: 'PATCH', corpo })
+}
+
+const formatoReal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+
+/** Valores monetários chegam da API como texto decimal ("14.00"). */
+export function emReais(valor: string): string {
+  return formatoReal.format(Number(valor))
 }

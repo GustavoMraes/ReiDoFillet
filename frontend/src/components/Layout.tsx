@@ -3,9 +3,19 @@ import type { ReactNode } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { ROTULOS_PERFIL } from '../auth/sessao'
 
-const ABAS = ['Mapa de Mesas', 'Comanda', 'Cozinha', 'Pagamento'] as const
+export type Aba = 'Mapa de Mesas' | 'Comanda' | 'Cozinha' | 'Pagamento'
 
-export default function Layout({ abaAtiva, children }: { abaAtiva?: (typeof ABAS)[number]; children: ReactNode }) {
+const ABAS: Aba[] = ['Mapa de Mesas', 'Comanda', 'Cozinha', 'Pagamento']
+
+interface Props {
+  abaAtiva?: Aba
+  /** Abas clicáveis; as demais aparecem desabilitadas. */
+  abasDisponiveis?: Aba[]
+  onNavegar?: (aba: Aba) => void
+  children: ReactNode
+}
+
+export default function Layout({ abaAtiva, abasDisponiveis = [], onNavegar, children }: Props) {
   const { usuario, sair } = useAuth()
 
   return (
@@ -20,7 +30,12 @@ export default function Layout({ abaAtiva, children }: { abaAtiva?: (typeof ABAS
         {abaAtiva && (
           <nav className="abas">
             {ABAS.map((aba) => (
-              <button key={aba} className={aba === abaAtiva ? 'ativa' : ''} disabled={aba !== abaAtiva}>
+              <button
+                key={aba}
+                className={aba === abaAtiva ? 'ativa' : ''}
+                disabled={aba !== abaAtiva && !abasDisponiveis.includes(aba)}
+                onClick={() => aba !== abaAtiva && onNavegar?.(aba)}
+              >
                 {aba}
               </button>
             ))}

@@ -1,4 +1,9 @@
+import { useState } from 'react'
+
+import { ErroApi } from '../api/cliente'
+import { abrirComanda } from '../api/comandas'
 import { listarMesas, type MesaMapa, type StatusMesa } from '../api/mesas'
+import { useMensagens } from '../components/Mensagens'
 import { usePolling } from '../hooks/usePolling'
 
 const INTERVALO_ATUALIZACAO_MS = 5000
@@ -23,21 +28,40 @@ function informacaoComplementar(mesa: MesaMapa): string | null {
   return null
 }
 
-function CartaoMesa({ mesa }: { mesa: MesaMapa }) {
+function CartaoMesa({ mesa, ocupado, onClick }: { mesa: MesaMapa; ocupado: boolean; onClick: () => void }) {
   const info = informacaoComplementar(mesa)
   return (
-    <article className={`cartao-mesa status-${mesa.status.toLowerCase()}`}>
+    <button
+      className={`cartao-mesa status-${mesa.status.toLowerCase()}`}
+      onClick={onClick}
+      disabled={ocupado}
+      aria-label={`Mesa ${mesa.numero}, ${ROTULOS[mesa.status]}`}
+    >
       <span className="localizacao">{mesa.localizacao}</span>
       <h3>Mesa {mesa.numero}</h3>
       <p className="capacidade">{mesa.capacidade} lugares</p>
       <span className="selo">{ROTULOS[mesa.status]}</span>
       {info && <p className="info">{info}</p>}
-    </article>
+    </button>
   )
 }
 
-export default function MapaMesas() {
+export default function MapaMesas({ onAbrirComanda }: { onAbrirComanda: (comandaId: number) => void }) {
   const { dados: mesas, carregando, desatualizado } = usePolling(listarMesas, INTERVALO_ATUALIZACAO_MS)
+  const mostrar = useMensagens()
+  const [abrindo, setAbrindo] = useState(false)
+
+  async function abrir(mesa: MesaMapa) {
+    setAbrindo(true)
+    try {
+      // Livre abre, Ocupada/Aguardando retoma; Manutenção e Reservada voltam com a mensagem do servidor.
+      const comanda = await abrirComanda(mesa.id)
+      onAbrirComanda(comanda.id)
+    } catch (erro) {
+      mostrar(erro instanceof ErroApi ? erro.message : 'Não foi possível abrir a comanda', 'erro')
+      setAbrindo(false)
+    }
+  }
 
   return (
     <section>
@@ -65,7 +89,7 @@ export default function MapaMesas() {
       {mesas && mesas.length > 0 && (
         <div className="grade-mesas">
           {mesas.map((mesa) => (
-            <CartaoMesa key={mesa.id} mesa={mesa} />
+            <CartaoMesa key={mesa.id} mesa={mesa} ocupado={abrindo} onClick={() => abrir(mesa)} />
           ))}
         </div>
       )}

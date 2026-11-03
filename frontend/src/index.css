@@ -252,6 +252,23 @@ h1 {
   border: 1px solid var(--borda);
   border-radius: 10px;
   background: var(--superficie);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cartao-mesa:hover:not(:disabled) {
+  border-color: var(--cor-status);
+}
+
+.cartao-mesa:focus-visible {
+  outline: 2px solid var(--marca);
+  outline-offset: 2px;
+}
+
+.cartao-mesa:disabled {
+  cursor: progress;
 }
 
 .cartao-mesa h3 {
@@ -300,6 +317,276 @@ h1 {
 
 .vazio {
   color: var(--texto-suave);
+}
+
+/* Mensagens temporárias */
+
+.mensagens {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 10;
+  display: grid;
+  gap: 8px;
+  max-width: min(360px, calc(100vw - 32px));
+}
+
+.mensagem {
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--livre);
+  border-radius: 8px;
+  background: #241f1b;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 35%);
+  font-size: 0.85rem;
+}
+
+.mensagem.erro {
+  border-color: var(--ocupada);
+}
+
+/* Botões genéricos */
+
+.primario,
+.secundario {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primario {
+  border: 0;
+  background: var(--marca);
+  color: #fff;
+}
+
+.secundario {
+  border: 1px solid var(--borda);
+  background: transparent;
+  color: var(--texto);
+}
+
+.primario:disabled,
+.secundario:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Tela da comanda */
+
+.cabecalho-comanda {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.cabecalho-comanda .secundario {
+  white-space: nowrap;
+}
+
+.colunas-comanda {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 20px;
+  align-items: start;
+}
+
+.categoria h2,
+.painel-comanda h2 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+
+.categoria {
+  margin-bottom: 18px;
+}
+
+.categoria ul,
+.itens {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.produto {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  background: var(--superficie);
+}
+
+.produto-info,
+.item-info {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.produto-info small,
+.item-info small {
+  color: var(--texto-suave);
+  font-size: 0.75rem;
+}
+
+.produto.indisponivel {
+  opacity: 0.55;
+}
+
+.preco,
+.subtotal {
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.produto-acoes {
+  display: flex;
+  gap: 6px;
+}
+
+.adicionar {
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--marca);
+  color: #fff;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.link {
+  border: 0;
+  background: none;
+  color: var(--texto-suave);
+  font: inherit;
+  font-size: 0.8rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.observacao {
+  margin-top: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  background: var(--fundo);
+  color: var(--texto);
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.selo-indisponivel {
+  color: var(--texto-suave);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.painel-comanda {
+  position: sticky;
+  top: 16px;
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  background: var(--superficie);
+}
+
+.painel-comanda .meta {
+  margin: -6px 0 0;
+  color: var(--texto-suave);
+  font-size: 0.75rem;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--borda);
+}
+
+.item-cancelado .item-info strong,
+.item-cancelado .subtotal {
+  color: var(--texto-suave);
+  text-decoration: line-through;
+}
+
+.item-quantidade {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+
+.item-quantidade button,
+.cancelar {
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--texto);
+  font: inherit;
+  cursor: pointer;
+}
+
+.item-quantidade button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.cancelar:hover {
+  border-color: var(--ocupada);
+  color: var(--ocupada);
+}
+
+.status-item {
+  width: fit-content;
+  font-weight: 600;
+}
+
+.status-item-pendente { color: var(--reservada) !important; }
+.status-item-em_preparo { color: var(--aguardando) !important; }
+.status-item-pronto,
+.status-item-entregue { color: var(--livre) !important; }
+
+.total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  color: var(--texto-suave);
+  font-size: 0.85rem;
+}
+
+.total strong {
+  color: var(--texto);
+  font-size: 1.4rem;
+}
+
+@media (max-width: 860px) {
+  .colunas-comanda {
+    grid-template-columns: 1fr;
+  }
+
+  .painel-comanda {
+    position: static;
+    order: -1;
+  }
 }
 
 @media (max-width: 1000px) {

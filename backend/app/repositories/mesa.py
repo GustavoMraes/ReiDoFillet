@@ -32,18 +32,23 @@ class MesaRepository:
     async def listar(self) -> list[Mesa]:
         return list((await self.session.execute(select(Mesa).order_by(Mesa.numero))).scalars())
 
-    async def comandas_ativas(self) -> list[ComandaAtiva]:
-        resultado = await self.session.execute(
-            select(Comanda.mesa_id, Comanda.status, Comanda.aberta_em).where(Comanda.status.in_(STATUS_COMANDA_ATIVA))
-        )
-        return [ComandaAtiva(*linha) for linha in resultado]
+    async def obter(self, mesa_id: int) -> Mesa | None:
+        return await self.session.get(Mesa, mesa_id)
 
-    async def reservas_na_janela(self, agora: datetime) -> list[ReservaNaJanela]:
-        """Reservas confirmadas cuja janela [inicio - 30min, inicio + 30min] contém `agora`."""
-        resultado = await self.session.execute(
-            select(Reserva.mesa_id, Reserva.inicio).where(
-                Reserva.status == StatusReserva.CONFIRMADA,
-                Reserva.inicio.between(agora - TOLERANCIA_RESERVA, agora + TOLERANCIA_RESERVA),
-            )
+    async def comandas_ativas(self, mesa_id: int | None = None) -> list[ComandaAtiva]:
+        consulta = select(Comanda.mesa_id, Comanda.status, Comanda.aberta_em).where(
+            Comanda.status.in_(STATUS_COMANDA_ATIVA)
         )
-        return [ReservaNaJanela(*linha) for linha in resultado]
+        if mesa_id is not None:
+            consulta = consulta.where(Comanda.mesa_id == mesa_id)
+        return [ComandaAtiva(*linha) for linha in await self.session.execute(consulta)]
+
+    async def reservas_na_janela(self, agora: datetime, mesa_id: int | None = None) -> list[ReservaNaJanela]:
+        """Reservas confirmadas cuja janela [inicio - 30min, inicio + 30min] contém `agora`."""
+        consulta = select(Reserva.mesa_id, Reserva.inicio).where(
+            Reserva.status == StatusReserva.CONFIRMADA,
+            Reserva.inicio.between(agora - TOLERANCIA_RESERVA, agora + TOLERANCIA_RESERVA),
+        )
+        if mesa_id is not None:
+            consulta = consulta.where(Reserva.mesa_id == mesa_id)
+        return [ReservaNaJanela(*linha) for linha in await self.session.execute(consulta)]

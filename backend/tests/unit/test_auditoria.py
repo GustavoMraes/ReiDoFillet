@@ -1,12 +1,13 @@
 from datetime import UTC, datetime
+from decimal import Decimal
 
 import pydantic
 import pytest
 
 from app.core.tempo import RelogioFixo
-from app.models import Funcionario, Mesa
+from app.models import Funcionario, ItemComanda, Mesa
 from app.repositories.auditoria import AuditoriaRepository
-from app.schemas.snapshots import FuncionarioSnapshot, MesaSnapshot, TentativaLoginSnapshot
+from app.schemas.snapshots import FuncionarioSnapshot, ItemComandaSnapshot, MesaSnapshot, TentativaLoginSnapshot
 from app.services.auditoria import Acao, AuditoriaService
 
 AGORA = datetime(2026, 10, 25, 23, 15, tzinfo=UTC)
@@ -102,3 +103,15 @@ def test_snapshot_de_tentativa_de_login_nao_aceita_senha():
         "login": "gabriela",
         "motivo": "CREDENCIAIS_INVALIDAS",
     }
+
+
+def test_snapshot_de_item_serializa_dinheiro_como_texto_decimal():
+    item = ItemComanda(
+        id=1, comanda_id=2, produto_id=3, quantidade=2, observacao="sem sal",
+        preco_unitario=Decimal("89.90"), status="PENDENTE", cancelado_por_id=None,
+    )
+
+    dados = ItemComandaSnapshot.model_validate(item).model_dump(mode="json")
+
+    assert dados["preco_unitario"] == "89.90"
+    assert dados["observacao"] == "sem sal"
