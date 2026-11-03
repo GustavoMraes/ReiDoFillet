@@ -9,6 +9,7 @@ import Cozinha from './pages/Cozinha'
 import Login from './pages/Login'
 import MapaMesas from './pages/MapaMesas'
 import PagamentoPage from './pages/Pagamento'
+import Reservas from './pages/Reservas'
 
 type Tela = Aba
 
@@ -39,12 +40,18 @@ export default function App() {
   const comComanda = comandaId !== null
   const disponiveis: Aba[] = [
     'Mapa de Mesas',
+    'Reservas',
     'Cozinha',
     ...(comComanda ? (['Comanda'] as Aba[]) : []),
     ...(comComanda && statusComanda === 'PRE_CONTA' ? (['Pagamento'] as Aba[]) : []),
   ]
   const navegar = (aba: Aba) => {
     if (disponiveis.includes(aba)) setTela(aba)
+  }
+  const abrirComanda = (id: number) => {
+    setComandaId(id)
+    setStatusComanda(null)
+    setTela('Comanda')
   }
   const encerrarComanda = () => {
     setComandaId(null)
@@ -54,15 +61,8 @@ export default function App() {
 
   return (
     <Layout abaAtiva={tela} abasDisponiveis={disponiveis} onNavegar={navegar}>
-      {tela === 'Mapa de Mesas' && (
-        <MapaMesas
-          onAbrirComanda={(id) => {
-            setComandaId(id)
-            setStatusComanda(null)
-            setTela('Comanda')
-          }}
-        />
-      )}
+      {tela === 'Mapa de Mesas' && <MapaMesas onAbrirComanda={abrirComanda} />}
+      {tela === 'Reservas' && <Reservas onAbrirComanda={abrirComanda} />}
       {tela === 'Comanda' && comandaId !== null && (
         <ComandaPage
           comandaId={comandaId}

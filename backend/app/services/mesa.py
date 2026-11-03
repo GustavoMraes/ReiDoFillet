@@ -4,7 +4,7 @@ from datetime import datetime
 from app.core.tempo import Relogio
 from app.models import Mesa
 from app.models.enums import StatusComanda, StatusMesa
-from app.repositories.mesa import TOLERANCIA_RESERVA, ComandaAtiva, MesaRepository, ReservaNaJanela
+from app.repositories.mesa import ANTECEDENCIA_AVISO_RESERVA, TOLERANCIA_RESERVA, ComandaAtiva, MesaRepository, ReservaNaJanela
 
 
 @dataclass(frozen=True)
@@ -16,6 +16,7 @@ class MesaNoMapa:
     status: StatusMesa
     minutos_atendimento: int | None = None
     reserva_inicio: datetime | None = None
+    proxima_reserva_inicio: datetime | None = None
 
 
 def calcular_mapa(
@@ -24,12 +25,18 @@ def calcular_mapa(
     reservas: list[ReservaNaJanela],
     agora: datetime,
 ) -> list[MesaNoMapa]:
-    """Status por prioridade: MANUTENCAO > OCUPADA > AGUARDANDO_PAGAMENTO > RESERVADA > LIVRE."""
+    """Status por prioridade: MANUTENCAO > OCUPADA > AGUARDANDO_PAGAMENTO > RESERVADA > LIVRE.
+
+    Mesa LIVRE com reserva começando entre 30min e 2h a partir de agora informa `proxima_reserva_inicio`.
+    """
     comanda_por_mesa = {comanda.mesa_id: comanda for comanda in comandas}
     reserva_por_mesa: dict[int, ReservaNaJanela] = {}
+    proxima_por_mesa: dict[int, ReservaNaJanela] = {}
     for reserva in sorted(reservas, key=lambda r: r.inicio):
         if abs(agora - reserva.inicio) <= TOLERANCIA_RESERVA:
             reserva_por_mesa.setdefault(reserva.mesa_id, reserva)
+        elif agora + TOLERANCIA_RESERVA < reserva.inicio <= agora + ANTECEDENCIA_AVISO_RESERVA:
+            proxima_por_mesa.setdefault(reserva.mesa_id, reserva)
 
     mapa = []
     for mesa in sorted(mesas, key=lambda m: m.numero):
@@ -37,6 +44,7 @@ def calcular_mapa(
         reserva = reserva_por_mesa.get(mesa.id)
         minutos = None
         inicio_reserva = None
+        proxima = None
 
         if mesa.em_manutencao:
             status = StatusMesa.MANUTENCAO
@@ -48,6 +56,8 @@ def calcular_mapa(
             inicio_reserva = reserva.inicio
         else:
             status = StatusMesa.LIVRE
+            if mesa.id in proxima_por_mesa:
+                proxima = proxima_por_mesa[mesa.id].inicio
 
         mapa.append(
             MesaNoMapa(
@@ -58,6 +68,7 @@ def calcular_mapa(
                 status=status,
                 minutos_atendimento=minutos,
                 reserva_inicio=inicio_reserva,
+                proxima_reserva_inicio=proxima,
             )
         )
     return mapa

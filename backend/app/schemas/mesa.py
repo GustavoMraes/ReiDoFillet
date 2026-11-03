@@ -17,3 +17,6 @@ class MesaMapaOut(BaseModel):
     reserva_inicio: datetime | None = Field(
         None, description="Início da reserva que bloqueia a mesa, no fuso de exibição (mesas RESERVADA)"
     )
+    proxima_reserva_inicio: datetime | None = Field(
+        None, description="Início da próxima reserva (em até 2h), no fuso de exibição (mesas LIVRE)"
+    )

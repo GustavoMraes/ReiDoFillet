@@ -3,9 +3,9 @@ import type { ReactNode } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { ROTULOS_PERFIL } from '../auth/sessao'
 
-export type Aba = 'Mapa de Mesas' | 'Comanda' | 'Cozinha' | 'Pagamento'
+export type Aba = 'Mapa de Mesas' | 'Reservas' | 'Comanda' | 'Cozinha' | 'Pagamento'
 
-const ABAS: Aba[] = ['Mapa de Mesas', 'Comanda', 'Cozinha', 'Pagamento']
+const ABAS: Aba[] = ['Mapa de Mesas', 'Reservas', 'Comanda', 'Cozinha', 'Pagamento']
 
 interface Props {
   abaAtiva?: Aba

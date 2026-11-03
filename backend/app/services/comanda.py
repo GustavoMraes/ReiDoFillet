@@ -76,15 +76,7 @@ class ComandaService:
 
         try:
             async with transacao(self.session):
-                comanda = Comanda(
-                    mesa_id=mesa_id,
-                    funcionario_id=funcionario.id,
-                    status=StatusComanda.ABERTA,
-                    aberta_em=self.relogio.agora(),
-                )
-                self.session.add(comanda)
-                await self.session.flush()
-                self._auditar(funcionario, Acao.CRIAR, "Comanda", comanda.id, None, ComandaSnapshot.model_validate(comanda))
+                comanda = await self.criar_na_transacao(mesa_id, funcionario)
         except IntegrityError:
             # Outra abertura simultânea venceu a corrida pelo índice único: devolve a comanda dela.
             existente = await self.comandas.ativa_da_mesa(mesa_id)
@@ -92,6 +84,22 @@ class ComandaService:
                 raise
             return existente, False
         return comanda, True
+
+    async def criar_na_transacao(self, mesa_id: int, funcionario: Funcionario) -> Comanda:
+        """Cria a comanda ABERTA dentro da transação do chamador (sem commit). Usada também pelo check-in.
+
+        Se outra comanda ativa já existir na mesa, o índice único dispara IntegrityError no flush.
+        """
+        comanda = Comanda(
+            mesa_id=mesa_id,
+            funcionario_id=funcionario.id,
+            status=StatusComanda.ABERTA,
+            aberta_em=self.relogio.agora(),
+        )
+        self.session.add(comanda)
+        await self.session.flush()
+        self._auditar(funcionario, Acao.CRIAR, "Comanda", comanda.id, None, ComandaSnapshot.model_validate(comanda))
+        return comanda
 
     async def obter(self, comanda_id: int) -> Comanda:
         comanda = await self.comandas.obter(comanda_id)

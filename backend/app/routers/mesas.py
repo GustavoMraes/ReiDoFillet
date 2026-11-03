@@ -34,6 +34,9 @@ async def mapa_de_mesas(service: MesaService = Depends(get_mesa_service)) -> lis
             status=mesa.status,
             minutos_atendimento=mesa.minutos_atendimento,
             reserva_inicio=para_exibicao(mesa.reserva_inicio) if mesa.reserva_inicio else None,
+            proxima_reserva_inicio=(
+                para_exibicao(mesa.proxima_reserva_inicio) if mesa.proxima_reserva_inicio else None
+            ),
         )
         for mesa in await service.mapa()
     ]

@@ -10,6 +10,8 @@ export interface MesaMapa {
   status: StatusMesa
   minutos_atendimento: number | null
   reserva_inicio: string | null
+  /** Mesa livre com reserva começando em até 2h. */
+  proxima_reserva_inicio: string | null
 }
 
 export function listarMesas(): Promise<MesaMapa[]> {

@@ -150,3 +150,30 @@ def test_relogio_do_servidor_em_utc_nao_altera_o_resultado():
 
     assert _uma(_mesa(), reservas=[_reserva()], agora=agora_utc).status == StatusMesa.RESERVADA
     assert _uma(_mesa(), reservas=[_reserva()], agora=agora_utc - timedelta(minutes=1)).status == StatusMesa.LIVRE
+
+
+# --- Próxima reserva em mesa livre ---
+
+
+def test_mesa_livre_com_reserva_proxima():
+    mesa = _uma(_mesa(), reservas=[_reserva()], agora=_hora(19, 0))
+
+    assert (mesa.status, mesa.proxima_reserva_inicio, mesa.reserva_inicio) == (StatusMesa.LIVRE, RESERVA_20H30, None)
+
+
+def test_reserva_distante_nao_aparece():
+    mesa = _uma(_mesa(), reservas=[_reserva()], agora=_hora(18, 29))
+
+    assert (mesa.status, mesa.proxima_reserva_inicio) == (StatusMesa.LIVRE, None)
+
+
+def test_reserva_na_janela_nao_e_proxima():
+    mesa = _uma(_mesa(), reservas=[_reserva()], agora=_hora(20, 0))
+
+    assert (mesa.status, mesa.proxima_reserva_inicio) == (StatusMesa.RESERVADA, None)
+
+
+def test_mesa_ocupada_nao_informa_proxima_reserva():
+    mesa = _uma(_mesa(), comandas=[_aberta()], reservas=[_reserva()], agora=_hora(19, 0))
+
+    assert (mesa.status, mesa.proxima_reserva_inicio) == (StatusMesa.OCUPADA, None)

@@ -8,6 +8,7 @@ from app.models import Comanda, Mesa, Reserva
 from app.models.enums import STATUS_COMANDA_ATIVA, StatusReserva
 
 TOLERANCIA_RESERVA = timedelta(minutes=30)
+ANTECEDENCIA_AVISO_RESERVA = timedelta(hours=2)
 
 
 @dataclass(frozen=True)
@@ -35,6 +36,11 @@ class MesaRepository:
     async def obter(self, mesa_id: int) -> Mesa | None:
         return await self.session.get(Mesa, mesa_id)
 
+    async def obter_para_atualizar(self, mesa_id: int) -> Mesa | None:
+        """Bloqueia a linha da mesa até o fim da transação: serializa reservas da mesma mesa."""
+        resultado = await self.session.execute(select(Mesa).where(Mesa.id == mesa_id).with_for_update())
+        return resultado.scalar_one_or_none()
+
     async def comandas_ativas(self, mesa_id: int | None = None) -> list[ComandaAtiva]:
         consulta = select(Comanda.mesa_id, Comanda.status, Comanda.aberta_em).where(
             Comanda.status.in_(STATUS_COMANDA_ATIVA)
@@ -44,10 +50,11 @@ class MesaRepository:
         return [ComandaAtiva(*linha) for linha in await self.session.execute(consulta)]
 
     async def reservas_na_janela(self, agora: datetime, mesa_id: int | None = None) -> list[ReservaNaJanela]:
-        """Reservas confirmadas cuja janela [inicio - 30min, inicio + 30min] contém `agora`."""
+        """Reservas confirmadas com início em [agora - 30min, agora + 2h]: as que bloqueiam a mesa agora
+        (janela de ±30min) e as próximas, avisadas no mapa."""
         consulta = select(Reserva.mesa_id, Reserva.inicio).where(
             Reserva.status == StatusReserva.CONFIRMADA,
-            Reserva.inicio.between(agora - TOLERANCIA_RESERVA, agora + TOLERANCIA_RESERVA),
+            Reserva.inicio.between(agora - TOLERANCIA_RESERVA, agora + ANTECEDENCIA_AVISO_RESERVA),
         )
         if mesa_id is not None:
             consulta = consulta.where(Reserva.mesa_id == mesa_id)

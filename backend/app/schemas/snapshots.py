@@ -4,6 +4,7 @@ A serialização é explícita, campo a campo, para que dados sensíveis (como s
 nunca cheguem ao histórico.
 """
 
+from datetime import datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
@@ -56,6 +57,17 @@ class ItemComandaSnapshot(Snapshot):
     preco_unitario: Decimal
     status: str
     cancelado_por_id: int | None
+
+
+class ReservaSnapshot(Snapshot):
+    """Sem o telefone: dado pessoal desnecessário para o rastro de auditoria."""
+
+    id: int
+    mesa_id: int
+    status: str
+    inicio: datetime
+    qtd_pessoas: int
+    nome_cliente: str
 
 
 class MesaSnapshot(Snapshot):
