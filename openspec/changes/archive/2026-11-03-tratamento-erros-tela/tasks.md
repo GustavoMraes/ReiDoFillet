@@ -8,7 +8,7 @@
 ## 2. Verificação e implantação
 
 - [x] 2.1 Verificar no navegador contra o backend local (D5): "Dado inesperado no mapa" (aviso no lugar do mapa, cabeçalho e aba Cozinha funcionando), "Tentar novamente depois de corrigido", "Ir para o início", "Volta à aba que falhou", "Falha no cabeçalho" (página geral e "Recarregar" mantendo a sessão) e "Suporte consulta o detalhe" (detalhes e console, sem token); conferir em largura de celular e que as telas sem falha continuam iguais
-- [ ] 2.2 Publicar (push na `main`) e verificar na URL pública que a navegação normal pelas abas de cada perfil continua igual
+- [x] 2.2 Publicar (push na `main`) e verificar na URL pública que a navegação normal pelas abas de cada perfil continua igual
 
 ## Workflow follow-up
 
