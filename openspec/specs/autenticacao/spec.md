@@ -114,7 +114,7 @@ O sistema SHALL permitir definir a senha de um funcionário existente pela inter
 - **THEN** nenhuma senha é alterada e é exibida a mensagem "Funcionário não encontrado"
 
 ### Requirement: Tela de login como ponto de entrada
-A interface SHALL exibir a tela de login enquanto não houver sessão válida. Após o login, Funcionário e Administrador MUST ver o Mapa de Mesas, e Contabilidade MUST ver um aviso de que ainda não há telas disponíveis para o seu perfil. A barra superior MUST mostrar o nome e o perfil do usuário.
+A interface SHALL exibir a tela de login enquanto não houver sessão válida. Após o login, Funcionário e Administrador MUST ver o Mapa de Mesas, e Contabilidade MUST ver a tela de Relatórios. A barra superior MUST mostrar o nome e o perfil do usuário.
 
 #### Scenario: Acesso sem sessão
 - **WHEN** a aplicação é aberta sem sessão válida
@@ -130,4 +130,4 @@ A interface SHALL exibir a tela de login enquanto não houver sessão válida. A
 
 #### Scenario: Entrada da contabilidade
 - **WHEN** um usuário com perfil Contabilidade entra no sistema
-- **THEN** é exibido o aviso "Ainda não há telas disponíveis para o perfil Contabilidade" e a barra superior mostra o nome e o perfil do usuário
+- **THEN** a tela de Relatórios é exibida com o relatório financeiro e a barra superior mostra o nome e o perfil do usuário

@@ -19,7 +19,7 @@
 ## 4. Implantação e verificação
 
 - [x] 4.1 Rodar `pytest` completo e `npm run build` e verificar que tudo passa
-- [ ] 4.2 Publicar (push na `main`), confirmar a migração `0004` aplicada e verificar na URL pública: como admin, o operacional e o financeiro de hoje batendo com as comandas do dia; como contabilidade, o financeiro do mês, o CSV e a auditoria filtrada
+- [x] 4.2 Publicar (push na `main`), confirmar a migração `0004` aplicada e verificar na URL pública: como admin, o operacional e o financeiro de hoje batendo com as comandas do dia; como contabilidade, o financeiro do mês, o CSV e a auditoria filtrada
 
 ## Workflow follow-up
 
