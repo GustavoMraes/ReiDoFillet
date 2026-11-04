@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import type { Comanda } from './api/comandas'
 import { useAuth } from './auth/AuthContext'
 import Layout, { type Aba } from './components/Layout'
+import LimiteDeErro from './components/LimiteDeErro'
 import ComandaPage from './pages/Comanda'
 import Cozinha from './pages/Cozinha'
 import GestaoCardapio from './pages/GestaoCardapio'
@@ -34,7 +35,10 @@ export default function App() {
   if (usuario.perfil === 'CONTABILIDADE') {
     return (
       <Layout abaAtiva="Relatórios" abas={['Relatórios']} abasDisponiveis={['Relatórios']}>
-        <Relatorios secoes={['Financeiro', 'Auditoria']} />
+        {/* Relatórios já é a tela inicial: "Ir para o início" só exibe a tela de novo. */}
+        <LimiteDeErro variante="tela">
+          <Relatorios secoes={['Financeiro', 'Auditoria']} />
+        </LimiteDeErro>
       </Layout>
     )
   }
@@ -68,29 +72,32 @@ export default function App() {
 
   return (
     <Layout abaAtiva={tela} abas={abas} abasDisponiveis={disponiveis} onNavegar={navegar}>
-      {tela === 'Mapa de Mesas' && <MapaMesas onAbrirComanda={abrirComanda} />}
-      {tela === 'Reservas' && <Reservas onAbrirComanda={abrirComanda} />}
-      {tela === 'Comanda' && comandaId !== null && (
-        <ComandaPage
-          comandaId={comandaId}
-          onVoltar={() => setTela('Mapa de Mesas')}
-          onStatus={setStatusComanda}
-          onIrParaPagamento={() => setTela('Pagamento')}
-          onEncerrada={encerrarComanda}
-        />
-      )}
-      {tela === 'Pagamento' && comandaId !== null && (
-        <PagamentoPage
-          comandaId={comandaId}
-          onStatus={setStatusComanda}
-          onVoltarParaComanda={() => setTela('Comanda')}
-          onEncerrada={encerrarComanda}
-        />
-      )}
-      {tela === 'Cozinha' && <Cozinha />}
-      {tela === 'Cardápio' && <GestaoCardapio administrador={administrador} />}
-      {tela === 'Usuários' && administrador && <Usuarios />}
-      {tela === 'Relatórios' && administrador && <Relatorios secoes={['Operacional', 'Financeiro', 'Auditoria']} />}
+      {/* Um limite por tela: a key nova a cada troca de aba (ou de comanda) descarta o erro anterior. */}
+      <LimiteDeErro key={`${tela}-${comandaId ?? ''}`} variante="tela" onIrParaInicio={() => setTela('Mapa de Mesas')}>
+        {tela === 'Mapa de Mesas' && <MapaMesas onAbrirComanda={abrirComanda} />}
+        {tela === 'Reservas' && <Reservas onAbrirComanda={abrirComanda} />}
+        {tela === 'Comanda' && comandaId !== null && (
+          <ComandaPage
+            comandaId={comandaId}
+            onVoltar={() => setTela('Mapa de Mesas')}
+            onStatus={setStatusComanda}
+            onIrParaPagamento={() => setTela('Pagamento')}
+            onEncerrada={encerrarComanda}
+          />
+        )}
+        {tela === 'Pagamento' && comandaId !== null && (
+          <PagamentoPage
+            comandaId={comandaId}
+            onStatus={setStatusComanda}
+            onVoltarParaComanda={() => setTela('Comanda')}
+            onEncerrada={encerrarComanda}
+          />
+        )}
+        {tela === 'Cozinha' && <Cozinha />}
+        {tela === 'Cardápio' && <GestaoCardapio administrador={administrador} />}
+        {tela === 'Usuários' && administrador && <Usuarios />}
+        {tela === 'Relatórios' && administrador && <Relatorios secoes={['Operacional', 'Financeiro', 'Auditoria']} />}
+      </LimiteDeErro>
     </Layout>
   )
 }
