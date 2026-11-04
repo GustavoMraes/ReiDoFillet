@@ -81,6 +81,22 @@ Variáveis de ambiente (os valores reais ficam só nos painéis, nunca no reposi
 
 Comandos do Render: build `pip install -r requirements.txt`; start `alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT` (as migrações rodam a cada deploy). Cada push na `main` dispara um novo deploy nas duas plataformas.
 
+### Contas de teste
+
+Contas públicas para avaliar o sistema em https://reidofilet.vercel.app, uma por perfil. Os dados do ambiente publicado são fictícios; qualquer pessoa com estas contas pode alterá-los.
+
+| Perfil | Usuário | Senha |
+|---|---|---|
+| Funcionário | `teste.garcom` | `SenhaGarcom` |
+| Administrador | `teste.admin` | `SenhaAdmin` |
+| Contabilidade | `teste.contabil` | `SenhaContabil` |
+
+As contas são criadas (ou têm a senha redefinida e são desbloqueadas) pelo script abaixo, que pede as senhas sem exibi-las:
+
+```bash
+python -m scripts.criar_contas_teste
+```
+
 ## Frontend
 
 ```bash
