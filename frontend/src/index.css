@@ -819,6 +819,35 @@ h1 {
   .cupom-acoes {
     display: none;
   }
+
+  /* Relatórios: página inteira (A4), texto escuro sobre fundo branco. */
+  .impressao.relatorio-impresso {
+    right: 0;
+    width: auto;
+    color: #000;
+  }
+
+  .relatorio-impresso *,
+  .relatorio-impresso .meta,
+  .relatorio-impresso small,
+  .relatorio-impresso span {
+    color: #000 !important;
+    background: none !important;
+    border-color: #999 !important;
+  }
+
+  .relatorio-impresso .barra span {
+    background: #555 !important;
+    print-color-adjust: exact;
+  }
+
+  .relatorio-impresso .tabela-rolavel {
+    overflow: visible;
+  }
+
+  .nao-imprimir {
+    display: none !important;
+  }
 }
 
 /* Painel da Cozinha */
@@ -1109,6 +1138,189 @@ h1 {
   .produto-gestao-acoes {
     grid-column: 1 / -1;
   }
+}
+
+/* Relatórios */
+
+.secoes-relatorio {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.secoes-relatorio .forma {
+  padding: 8px 16px;
+}
+
+.barra-relatorio {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 16px;
+  margin-bottom: 24px;
+}
+
+.atalhos-periodo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  padding-bottom: 10px;
+}
+
+.atalhos-periodo .link {
+  font-size: 0.85rem;
+}
+
+.relatorio-cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.relatorio-cabecalho h2 {
+  margin: 0 0 4px;
+}
+
+.relatorio-cabecalho .meta {
+  margin: 0;
+}
+
+.indicadores {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.indicador {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  background: var(--superficie);
+}
+
+.indicador small,
+.indicador span {
+  color: var(--texto-suave);
+  font-size: 0.78rem;
+}
+
+.indicador strong {
+  font-size: 1.35rem;
+}
+
+.bloco-relatorio {
+  margin-bottom: 24px;
+}
+
+.bloco-relatorio h3 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
+.colunas-relatorio {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0 24px;
+}
+
+.tabela-rolavel {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.tabela th,
+.tabela td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--borda);
+  text-align: left;
+  vertical-align: top;
+}
+
+.tabela th {
+  color: var(--texto-suave);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tabela .numero {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.grafico-barras {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+}
+
+.grafico-barras li {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.grafico-barras .rotulo,
+.grafico-barras .valor {
+  color: var(--texto-suave);
+  white-space: nowrap;
+}
+
+.barra {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--borda);
+  overflow: hidden;
+}
+
+.barra span {
+  display: block;
+  height: 100%;
+  background: var(--marca);
+}
+
+.filtros-auditoria {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.detalhes-auditoria td {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  background: var(--superficie);
+}
+
+.detalhes-auditoria pre {
+  margin: 4px 0 0;
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.paginacao {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 /* Reservas */

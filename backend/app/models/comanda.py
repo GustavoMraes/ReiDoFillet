@@ -19,6 +19,9 @@ class Comanda(Base):
             name="taxa_servico_valida",
         ),
         Index("ix_comanda_mesa_status", "mesa_id", "status"),
+        # Relatórios por período: operacional pela abertura, financeiro pelo fechamento.
+        Index("ix_comanda_aberta_em", "aberta_em"),
+        Index("ix_comanda_fechada_em", "fechada_em"),
         # No máximo uma comanda ativa por mesa, inclusive sob concorrência.
         Index(
             "uq_comanda_ativa_por_mesa",

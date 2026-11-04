@@ -4,7 +4,7 @@ A serialização é explícita, campo a campo, para que dados sensíveis (como s
 nunca cheguem ao histórico.
 """
 
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
@@ -29,6 +29,19 @@ class TentativaLoginSnapshot(Snapshot):
 
     login: str
     motivo: str
+
+
+class ConsultaSnapshot(Snapshot):
+    """Filtros de uma consulta de relatório ou da auditoria (HU07: toda consulta fica registrada)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    inicio: date
+    fim: date
+    usuario_id: int | None = None
+    acao: str | None = None
+    entidade: str | None = None
+    pagina: int | None = None
 
 
 class ComandaSnapshot(Snapshot):

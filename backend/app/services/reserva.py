@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import Conflito, DadoInvalido, RecursoNaoEncontrado
-from app.core.tempo import Relogio, para_exibicao
+from app.core.tempo import Relogio, intervalo_do_dia, para_exibicao
 from app.db.transacao import transacao
 from app.models import Comanda, Funcionario, Reserva
 from app.models.enums import StatusReserva
@@ -15,7 +15,7 @@ from app.schemas.reserva import ReservaOut
 from app.schemas.snapshots import ReservaSnapshot
 from app.services.auditoria import Acao, AuditoriaService
 from app.services.comanda import ComandaService
-from app.services.reserva_tempo import DURACAO_RESERVA, hora_curta, intervalo_do_dia, normalizar_inicio, situacao
+from app.services.reserva_tempo import DURACAO_RESERVA, hora_curta, normalizar_inicio, situacao
 
 TAMANHO_MAXIMO_NOME = 100
 TELEFONE_MINIMO, TELEFONE_MAXIMO = 8, 20

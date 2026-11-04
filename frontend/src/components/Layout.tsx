@@ -4,7 +4,15 @@ import { useAuth } from '../auth/AuthContext'
 import { ROTULOS_PERFIL } from '../auth/sessao'
 import TrocarSenha from './TrocarSenha'
 
-export type Aba = 'Mapa de Mesas' | 'Reservas' | 'Comanda' | 'Cozinha' | 'Pagamento' | 'Cardápio' | 'Usuários'
+export type Aba =
+  | 'Mapa de Mesas'
+  | 'Reservas'
+  | 'Comanda'
+  | 'Cozinha'
+  | 'Pagamento'
+  | 'Cardápio'
+  | 'Usuários'
+  | 'Relatórios'
 
 interface Props {
   abaAtiva?: Aba

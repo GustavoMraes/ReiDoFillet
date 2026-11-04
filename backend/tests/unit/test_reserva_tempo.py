@@ -1,7 +1,8 @@
 from datetime import UTC, date, datetime
 from zoneinfo import ZoneInfo
 
-from app.services.reserva_tempo import hora_curta, intervalo_do_dia, normalizar_inicio, situacao
+from app.core.tempo import intervalo_do_dia
+from app.services.reserva_tempo import hora_curta, normalizar_inicio, situacao
 
 SP = ZoneInfo("America/Sao_Paulo")
 RESERVA = datetime(2026, 11, 2, 20, 30, tzinfo=SP)

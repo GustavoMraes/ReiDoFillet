@@ -3,13 +3,13 @@ import { useEffect, useState } from 'react'
 import type { Comanda } from './api/comandas'
 import { useAuth } from './auth/AuthContext'
 import Layout, { type Aba } from './components/Layout'
-import AvisoContabilidade from './pages/AvisoContabilidade'
 import ComandaPage from './pages/Comanda'
 import Cozinha from './pages/Cozinha'
 import GestaoCardapio from './pages/GestaoCardapio'
 import Login from './pages/Login'
 import MapaMesas from './pages/MapaMesas'
 import PagamentoPage from './pages/Pagamento'
+import Relatorios from './pages/Relatorios'
 import Reservas from './pages/Reservas'
 import Usuarios from './pages/Usuarios'
 
@@ -33,29 +33,22 @@ export default function App() {
 
   if (usuario.perfil === 'CONTABILIDADE') {
     return (
-      <Layout>
-        <AvisoContabilidade />
+      <Layout abaAtiva="Relatórios" abas={['Relatórios']} abasDisponiveis={['Relatórios']}>
+        <Relatorios secoes={['Financeiro', 'Auditoria']} />
       </Layout>
     )
   }
 
   const administrador = usuario.perfil === 'ADMIN'
-  const abas: Aba[] = [
-    'Mapa de Mesas',
-    'Reservas',
-    'Comanda',
-    'Cozinha',
-    'Pagamento',
-    'Cardápio',
-    ...(administrador ? (['Usuários'] as Aba[]) : []),
-  ]
+  const exclusivasDoAdmin: Aba[] = administrador ? ['Usuários', 'Relatórios'] : []
+  const abas: Aba[] = ['Mapa de Mesas', 'Reservas', 'Comanda', 'Cozinha', 'Pagamento', 'Cardápio', ...exclusivasDoAdmin]
   const comComanda = comandaId !== null
   const disponiveis: Aba[] = [
     'Mapa de Mesas',
     'Reservas',
     'Cozinha',
     'Cardápio',
-    ...(administrador ? (['Usuários'] as Aba[]) : []),
+    ...exclusivasDoAdmin,
     ...(comComanda ? (['Comanda'] as Aba[]) : []),
     ...(comComanda && statusComanda === 'PRE_CONTA' ? (['Pagamento'] as Aba[]) : []),
   ]
@@ -97,6 +90,7 @@ export default function App() {
       {tela === 'Cozinha' && <Cozinha />}
       {tela === 'Cardápio' && <GestaoCardapio administrador={administrador} />}
       {tela === 'Usuários' && administrador && <Usuarios />}
+      {tela === 'Relatórios' && administrador && <Relatorios secoes={['Operacional', 'Financeiro', 'Auditoria']} />}
     </Layout>
   )
 }

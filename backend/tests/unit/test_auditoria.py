@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pydantic
@@ -7,7 +7,13 @@ import pytest
 from app.core.tempo import RelogioFixo
 from app.models import Funcionario, ItemComanda, Mesa
 from app.repositories.auditoria import AuditoriaRepository
-from app.schemas.snapshots import FuncionarioSnapshot, ItemComandaSnapshot, MesaSnapshot, TentativaLoginSnapshot
+from app.schemas.snapshots import (
+    ConsultaSnapshot,
+    FuncionarioSnapshot,
+    ItemComandaSnapshot,
+    MesaSnapshot,
+    TentativaLoginSnapshot,
+)
 from app.services.auditoria import Acao, AuditoriaService
 
 AGORA = datetime(2026, 10, 25, 23, 15, tzinfo=UTC)
@@ -115,3 +121,26 @@ def test_snapshot_de_item_serializa_dinheiro_como_texto_decimal():
 
     assert dados["preco_unitario"] == "89.90"
     assert dados["observacao"] == "sem sal"
+
+
+def test_snapshot_da_consulta_grava_os_filtros():
+    servico, _ = _servico()
+
+    log = servico.registrar(
+        usuario_id=7,
+        acao=Acao.CONSULTAR,
+        entidade="Relatorio",
+        entidade_id="auditoria",
+        antes=None,
+        depois=ConsultaSnapshot(inicio=date(2026, 10, 1), fim=date(2026, 10, 31), acao="PAGAR", pagina=2),
+    )
+
+    assert (log.acao, log.entidade, log.entidade_id) == ("CONSULTAR", "Relatorio", "auditoria")
+    assert log.dados_depois == {
+        "inicio": "2026-10-01", "fim": "2026-10-31", "usuario_id": None, "acao": "PAGAR", "entidade": None, "pagina": 2
+    }
+
+
+def test_snapshot_da_consulta_recusa_campos_extras():
+    with pytest.raises(pydantic.ValidationError):
+        ConsultaSnapshot(inicio=date(2026, 10, 1), fim=date(2026, 10, 1), senha="x")
